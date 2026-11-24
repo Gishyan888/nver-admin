@@ -1,11 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
+import { CustomerPage } from './pages/CustomerPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LoginPage } from './pages/LoginPage'
 import { OrderDetailsPage } from './pages/OrderDetailsPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { ReviewsPage } from './pages/ReviewsPage'
+import { UsersPage } from './pages/UsersPage'
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<OrdersPage />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/:customerId" element={<CustomerPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route
               path="/orders/:giftRequestId"

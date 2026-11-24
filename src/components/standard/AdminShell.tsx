@@ -38,12 +38,15 @@ function MenuItem({ label, current = false, to }: MenuItemProps) {
 
 type AdminShellProps = {
   title?: string
+  /** Replaces the default page-title header (e.g. customer page identity). */
+  header?: ReactNode
   currentNav?: AdminNavItem
   children: ReactNode
 }
 
 export function AdminShell({
   title = '[Page title]',
+  header,
   currentNav = 'Orders',
   children,
 }: AdminShellProps) {
@@ -62,7 +65,11 @@ export function AdminShell({
               current={currentNav === 'Orders'}
               to="/"
             />
-            <MenuItem label="Users" current={currentNav === 'Users'} />
+            <MenuItem
+              label="Users"
+              current={currentNav === 'Users'}
+              to="/users"
+            />
             <MenuItem
               label="Reviews"
               current={currentNav === 'Reviews'}
@@ -76,10 +83,16 @@ export function AdminShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center border-b border-border-default px-8 py-5">
-          <h1 className="text-xl font-semibold leading-7 text-text-primary">
-            {title}
-          </h1>
+        <header
+          className={`flex shrink-0 border-b border-border-default px-8 ${
+            header ? 'flex-col items-start py-6' : 'items-center py-5'
+          }`}
+        >
+          {header ?? (
+            <h1 className="text-xl font-semibold leading-7 text-text-primary">
+              {title}
+            </h1>
+          )}
         </header>
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
           {children}
