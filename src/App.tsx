@@ -4,6 +4,7 @@ import { RequireAuth } from './auth/RequireAuth'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { HomePlaceholder } from './pages/HomePlaceholder'
 import { LoginPage } from './pages/LoginPage'
+import { OrderDetailsGiftOptionsHost } from './pages/OrderDetailsGiftOptionsHost'
 
 export default function App() {
   return (
@@ -14,6 +15,10 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<HomePlaceholder />} />
+            <Route
+              path="/orders/:giftRequestId"
+              element={<OrderDetailsGiftOptionsHost />}
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

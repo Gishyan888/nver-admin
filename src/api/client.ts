@@ -83,21 +83,28 @@ async function refreshOnce(): Promise<boolean> {
 export type RequestOptions = {
   method?: string
   body?: unknown
+  /** multipart FormData — do not set Content-Type (browser sets the boundary) */
+  formData?: FormData
   auth?: boolean
   /** Skip the single refresh+retry on 401 UNAUTHORIZED */
   skipRefresh?: boolean
+  /** Return raw Response for blobs / non-JSON */
+  raw?: boolean
 }
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function sendRequest(
+  path: string,
+  options: RequestOptions,
+): Promise<Response> {
   if (!isOnline()) {
     throw new NetworkError()
   }
 
   const headers: Record<string, string> = {
-    Accept: 'application/json',
+    Accept: options.raw ? '*/*' : 'application/json',
   }
 
-  if (options.body !== undefined) {
+  if (options.body !== undefined && !options.formData) {
     headers['Content-Type'] = 'application/json'
   }
 
@@ -108,17 +115,30 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
   }
 
-  let response: Response
+  let body: BodyInit | undefined
+  if (options.formData) {
+    body = options.formData
+  } else if (options.body !== undefined) {
+    body = JSON.stringify(options.body)
+  }
+
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    return await fetch(`${API_BASE_URL}${path}`, {
       method: options.method ?? 'GET',
       credentials: 'include',
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body,
     })
   } catch {
     throw new NetworkError()
   }
+}
+
+async function withAuthRetry(
+  path: string,
+  options: RequestOptions,
+): Promise<Response> {
+  const response = await sendRequest(path, options)
 
   if (
     response.status === 401 &&
@@ -129,9 +149,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (body?.code === 'UNAUTHORIZED' || body?.code === undefined) {
       const refreshed = await refreshOnce()
       if (refreshed) {
-        return apiRequest<T>(path, { ...options, skipRefresh: true })
+        return sendRequest(path, { ...options, skipRefresh: true })
       }
-      throw new ApiError(401, body ?? { statusCode: 401, code: 'SESSION_INVALID', message: '' })
+      throw new ApiError(
+        401,
+        body ?? { statusCode: 401, code: 'SESSION_INVALID', message: '' },
+      )
     }
     if (body?.code === 'SESSION_INVALID') {
       tokenStore.setAccessToken(null)
@@ -139,6 +162,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
     throw new ApiError(response.status, body)
   }
+
+  return response
+}
+
+export async function apiRequest<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const response = await withAuthRetry(path, options)
 
   if (!response.ok) {
     throw new ApiError(response.status, await parseErrorBody(response))
@@ -149,6 +181,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   return (await response.json()) as T
+}
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const response = await withAuthRetry(path, { raw: true })
+  if (!response.ok) {
+    throw new ApiError(response.status, await parseErrorBody(response))
+  }
+  return response.blob()
+}
+
+export function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`
 }
 
 export { refreshOnce }
