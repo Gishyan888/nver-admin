@@ -3,7 +3,7 @@ import { AuthProvider } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LoginPage } from './pages/LoginPage'
-import { OrderDetailsGiftOptionsHost } from './pages/OrderDetailsGiftOptionsHost'
+import { OrderDetailsPage } from './pages/OrderDetailsPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { ReviewsPage } from './pages/ReviewsPage'
 
@@ -19,7 +19,7 @@ export default function App() {
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route
               path="/orders/:giftRequestId"
-              element={<OrderDetailsGiftOptionsHost />}
+              element={<OrderDetailsPage />}
             />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
