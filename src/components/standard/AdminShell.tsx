@@ -1,40 +1,74 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ApiError, NetworkError } from '../../api/types'
+import { useAuth } from '../../auth/useAuth'
+import { StandardContentState } from './StandardContentState'
 
 export type AdminNavItem = 'Orders' | 'Users' | 'Reviews'
+
+const NAV_PATH: Record<AdminNavItem, string> = {
+  Orders: '/',
+  Users: '/users',
+  Reviews: '/reviews',
+}
 
 type MenuItemProps = {
   label: AdminNavItem | 'Log out'
   current?: boolean
   to?: string
+  onClick?: () => void
+  disabled?: boolean
 }
 
 /**
- * Stand-in menu and page header from the standard-state frames (T-01-09).
- * Real menu / header come in T-10-10; pages keep using this shell until then.
+ * Admin panel frame (T-10-10): fixed menu, page header, Log out.
  */
-function MenuItem({ label, current = false, to }: MenuItemProps) {
-  const className = `flex h-9 w-full items-center rounded-lg px-3 ${
-    current ? 'bg-accent-subtle' : ''
-  }`
-  const textClass = `text-sm font-medium leading-5 whitespace-nowrap ${
-    current ? 'text-text-primary' : 'text-border-default'
-  }`
+function MenuItem({
+  label,
+  current = false,
+  to,
+  onClick,
+  disabled = false,
+}: MenuItemProps) {
+  const className = `flex h-9 w-full items-center rounded-lg px-3 text-left text-sm font-medium leading-5 whitespace-nowrap ${
+    current
+      ? 'bg-accent-subtle text-text-primary'
+      : 'text-border-default hover:bg-text-secondary hover:text-text-on-accent'
+  } ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer'}`
+
+  if (current) {
+    return (
+      <div className={className} aria-current="page">
+        {label}
+      </div>
+    )
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={className}
+      >
+        {label}
+      </button>
+    )
+  }
 
   if (to) {
     return (
       <Link to={to} className={className}>
-        <span className={textClass}>{label}</span>
+        {label}
       </Link>
     )
   }
 
-  return (
-    <div className={className}>
-      <span className={textClass}>{label}</span>
-    </div>
-  )
+  return <div className={className}>{label}</div>
 }
+
+type FrameOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type AdminShellProps = {
   title?: string
@@ -50,9 +84,39 @@ export function AdminShell({
   currentNav = 'Orders',
   children,
 }: AdminShellProps) {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const [overlay, setOverlay] = useState<FrameOverlay>('none')
+  const loggingOut = overlay === 'loading'
+
+  async function handleLogout() {
+    if (loggingOut) {
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setOverlay('loading')
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      if (error instanceof ApiError) {
+        setOverlay('error')
+        return
+      }
+      setOverlay('error')
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-stretch bg-bg-default">
-      <aside className="flex w-60 shrink-0 flex-col justify-between bg-bg-inverse p-4">
+    <div className="flex h-screen items-stretch overflow-hidden bg-bg-default">
+      <aside className="flex h-full w-60 shrink-0 flex-col justify-between bg-bg-inverse p-4">
         <div className="flex w-full flex-col gap-6">
           <div className="flex w-full items-start px-3 py-1">
             <p className="text-xl font-semibold leading-7 text-text-on-accent">
@@ -60,32 +124,33 @@ export function AdminShell({
             </p>
           </div>
           <nav className="flex w-full flex-col gap-1">
-            <MenuItem
-              label="Orders"
-              current={currentNav === 'Orders'}
-              to="/"
-            />
-            <MenuItem
-              label="Users"
-              current={currentNav === 'Users'}
-              to="/users"
-            />
-            <MenuItem
-              label="Reviews"
-              current={currentNav === 'Reviews'}
-              to="/reviews"
-            />
+            {(Object.keys(NAV_PATH) as AdminNavItem[]).map((item) => (
+              <MenuItem
+                key={item}
+                label={item}
+                current={currentNav === item}
+                to={NAV_PATH[item]}
+              />
+            ))}
           </nav>
         </div>
         <div className="flex w-full flex-col">
-          <MenuItem label="Log out" />
+          <MenuItem
+            label="Log out"
+            onClick={() => {
+              void handleLogout()
+            }}
+            disabled={loggingOut}
+          />
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header
           className={`flex shrink-0 border-b border-border-default px-8 ${
-            header ? 'flex-col items-start py-6' : 'items-center py-5'
+            header
+              ? 'flex-col items-start py-6'
+              : 'h-[68px] items-center py-0'
           }`}
         >
           {header ?? (
@@ -95,7 +160,19 @@ export function AdminShell({
           )}
         </header>
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
-          {children}
+          {overlay === 'none' ? (
+            children
+          ) : (
+            <StandardContentState
+              kind={
+                overlay === 'loading'
+                  ? 'loading'
+                  : overlay === 'offline'
+                    ? 'offline'
+                    : 'error'
+              }
+            />
+          )}
         </div>
       </div>
     </div>

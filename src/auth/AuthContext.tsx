@@ -8,7 +8,6 @@ import {
 } from 'react'
 import { loginAdmin, logoutAdmin, refreshAdminSession } from '../api/auth'
 import { configureApiClient } from '../api/client'
-import { ApiError, NetworkError } from '../api/types'
 import { AuthContext, type AuthStatus } from './auth-context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -69,16 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated')
   }, [])
 
+  /** Clears the session only after a successful logout (T-10-10). */
   const logout = useCallback(async () => {
-    try {
-      await logoutAdmin()
-    } catch (error) {
-      if (!(error instanceof ApiError || error instanceof NetworkError)) {
-        throw error
-      }
-    } finally {
-      markAnonymous()
-    }
+    await logoutAdmin()
+    markAnonymous()
   }, [markAnonymous])
 
   const value = useMemo(
