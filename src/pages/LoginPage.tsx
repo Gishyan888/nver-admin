@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, NetworkError } from '../api/types'
 import { useAuth } from '../auth/useAuth'
 import { AuthPageFrame, PageState } from '../components/standard/PageState'
+import { fieldErrorFromDetails } from '../lib/fieldErrors'
 
 const EMAIL_MAX = 254
 const PASSWORD_MAX = 128
@@ -14,26 +15,17 @@ type FieldErrors = {
 
 type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
-function fieldErrorFromDetails(
-  details: Record<string, unknown> | null,
-  field: 'email' | 'password',
-): string | undefined {
-  if (!details) {
-    return undefined
-  }
-  const value = details[field]
-  if (typeof value === 'string' && value.length > 0) {
-    return value
-  }
-  if (Array.isArray(value) && typeof value[0] === 'string') {
-    return value[0]
-  }
-  return undefined
+type LoginLocationState = {
+  passwordSaved?: boolean
 }
 
 export function LoginPage() {
   const { status, login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const passwordSaved = Boolean(
+    (location.state as LoginLocationState | null)?.passwordSaved,
+  )
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -104,7 +96,6 @@ export function LoginPage() {
           return
         }
 
-        // 403 FORBIDDEN, 429 TOO_MANY_REQUESTS, and any other refusal
         setOverlay('error')
         return
       }
@@ -139,9 +130,16 @@ export function LoginPage() {
         onSubmit={onSubmit}
         className="flex w-full max-w-[400px] flex-col gap-6 rounded-xl border border-border-default bg-bg-default p-8"
       >
-        <h1 className="w-full text-2xl font-semibold leading-8 text-text-primary">
-          Log in
-        </h1>
+        <div className="flex w-full flex-col gap-2">
+          <h1 className="w-full text-2xl font-semibold leading-8 text-text-primary">
+            Log in
+          </h1>
+          {passwordSaved ? (
+            <p className="w-full text-sm leading-5 font-normal text-success-default">
+              Password saved. Log in with your new password.
+            </p>
+          ) : null}
+        </div>
 
         <div className="flex w-full flex-col gap-4">
           <div className="flex w-full flex-col gap-2">

@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
-import { ForgotPasswordPlaceholder } from './pages/ForgotPasswordPlaceholder'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { HomePlaceholder } from './pages/HomePlaceholder'
 import { LoginPage } from './pages/LoginPage'
 
@@ -11,7 +11,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPlaceholder />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<HomePlaceholder />} />
           </Route>
