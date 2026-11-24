@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { AdminShell } from '../components/standard/AdminShell'
+import { StandardContentState } from '../components/standard/StandardContentState'
 import { useAuth } from './useAuth'
-import { PageState } from '../components/standard/PageState'
 
 export function RequireAuth() {
   const { status } = useAuth()
@@ -8,9 +9,9 @@ export function RequireAuth() {
 
   if (status === 'booting') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-default">
-        <PageState kind="loading" />
-      </div>
+      <AdminShell>
+        <StandardContentState kind="loading" />
+      </AdminShell>
     )
   }
 
