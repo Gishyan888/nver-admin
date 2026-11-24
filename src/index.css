@@ -19,6 +19,14 @@
   --color-success-default: #0f7b6c;
   --color-success-subtle: #ddedea;
   --color-warning-subtle: #fbf3db;
+
+  --color-status-registered: #ddebf1;
+  --color-status-in-progress: #eae4f2;
+  --color-status-approved: #fbf3db;
+  --color-status-preparing: #faebdd;
+  --color-status-ready-for-pickup: #ddedea;
+  --color-status-completed: #e9e5e3;
+  --color-status-canceled: #fbe4e4;
 }
 
 html,
