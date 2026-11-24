@@ -15,9 +15,9 @@ import {
   DEMO_ORDER_DETAILS_NEW,
   DEMO_ORDER_DETAILS_PAID,
 } from '../components/order-details/orderDetailsDemo'
+import { InternalNotesSection } from '../components/order-details/InternalNotesSection'
 import { PaymentSection } from '../components/order-details/PaymentSection'
 import { RequestSection } from '../components/order-details/RequestSection'
-import { SectionPlaceholder } from '../components/order-details/SectionPlaceholder'
 import type { OrderDetailsDemo, PaymentState } from '../components/order-details/types'
 import { ReviewSection } from '../components/reviews/ReviewSection'
 import {
@@ -195,7 +195,9 @@ export function OrderDetailsPage() {
             />
             <TimelineSection status={status} reachedAt={reachedAt} />
             <PaymentSection payment={payment} />
-            <SectionPlaceholder title="Internal notes" width="side" />
+            <InternalNotesSection
+              seedDemoNotes={params.get('demo') !== 'notes-empty'}
+            />
           </div>
         </div>
       </div>

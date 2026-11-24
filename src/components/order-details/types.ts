@@ -37,3 +37,11 @@ export type OrderDetailsDemo = {
   tier: GiftingTier
   payment: PaymentState
 }
+
+/** One internal note on a gift request (T-10-13). Cannot be edited or deleted. */
+export type InternalNote = {
+  id: string
+  text: string
+  createdAt: string
+  adminEmail: string
+}
