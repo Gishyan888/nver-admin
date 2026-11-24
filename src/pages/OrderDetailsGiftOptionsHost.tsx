@@ -21,13 +21,15 @@ function parseStatus(value: string | null): GiftRequestStatus {
 }
 
 /**
- * Host for T-03-07 until T-10-12 builds the full order details page.
+ * Host for T-03-07 / T-03-08 until T-10-12 builds the full order details page.
  * Route: /orders/:giftRequestId?status=In%20Progress
+ * Comments UI fixtures (until T-03-06): &demo=comments
  */
 export function OrderDetailsGiftOptionsHost() {
   const { giftRequestId = '' } = useParams()
   const [params] = useSearchParams()
   const status = parseStatus(params.get('status'))
+  const commentsDemo = params.get('demo') === 'comments'
 
   return (
     <AdminShell title="Order details">
@@ -40,14 +42,19 @@ export function OrderDetailsGiftOptionsHost() {
             Back to orders
           </Link>
           <p className="mt-2 text-sm text-text-secondary">
-            Gift options section (T-03-07). Full order details: T-10-12. Status
-            for this host: {status} (change with ?status=).
+            Gift options (T-03-07) and comments / requests for alternatives
+            (T-03-08). Full order details: T-10-12. Status for this host:{' '}
+            {status} (change with ?status=).
+            {commentsDemo
+              ? ' Showing frame fixtures for comments and requests (demo=comments); API wiring waits on T-03-06.'
+              : ' Add &demo=comments for comment/request fixtures until T-03-06.'}
           </p>
         </div>
         {giftRequestId ? (
           <GiftOptionsSection
             giftRequestId={giftRequestId}
             status={status}
+            commentsDemo={commentsDemo}
           />
         ) : (
           <p className="text-sm text-text-secondary">Missing gift request id.</p>

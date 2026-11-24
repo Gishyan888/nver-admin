@@ -14,34 +14,63 @@ import {
   type GiftRequestStatus,
 } from '../../lib/giftRequestStatus'
 import { StandardContentState } from '../standard/StandardContentState'
+import { AlternativeRequestsPanel } from './AlternativeRequestsPanel'
 import { AuthenticatedImage } from './AuthenticatedImage'
+import {
+  DEMO_ALTERNATIVE_REQUESTS,
+  DEMO_COMMENTS_BY_OPTION_ID,
+  demoItemsForStatus,
+} from './commentsDemo'
 import { DeleteGiftOptionDialog } from './DeleteGiftOptionDialog'
+import { GiftOptionCommentsPanel } from './GiftOptionCommentsPanel'
 import { GiftOptionDialog } from './GiftOptionDialog'
+import type { AlternativeRequest, GiftOptionComment } from './types'
 
 type SectionOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type GiftOptionsSectionProps = {
   giftRequestId: string
   status: GiftRequestStatus
+  /**
+   * Frame fixtures for comments/requests until T-03-06 Result.
+   * Skips the gift-options API and uses demo items.
+   */
+  commentsDemo?: boolean
 }
 
 export function GiftOptionsSection({
   giftRequestId,
   status,
+  commentsDemo = false,
 }: GiftOptionsSectionProps) {
+  const paidReadOnly = isGiftOptionsReadOnlyPaid(status)
+
   const [items, setItems] = useState<GiftOption[]>([])
-  const [overlay, setOverlay] = useState<SectionOverlay>('loading')
+  const [commentsByGiftOptionId, setCommentsByGiftOptionId] = useState<
+    Record<string, GiftOptionComment[]>
+  >({})
+  const [alternativeRequests, setAlternativeRequests] = useState<
+    AlternativeRequest[]
+  >([])
+  const [overlay, setOverlay] = useState<SectionOverlay>(
+    commentsDemo ? 'none' : 'loading',
+  )
   const [dialog, setDialog] = useState<'create' | 'edit' | null>(null)
   const [editing, setEditing] = useState<GiftOption | null>(null)
   const [deleting, setDeleting] = useState<GiftOption | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const editable = canManageGiftOptions(status)
-  const paidReadOnly = isGiftOptionsReadOnlyPaid(status)
-  const showCount = editable
-  const showAdd = editable && items.length < 3
+  const showCount = canManageGiftOptions(status)
+  const showAddButton = canManageGiftOptions(status) && items.length < 3
 
   const load = useCallback(async () => {
+    if (commentsDemo) {
+      setItems(demoItemsForStatus(paidReadOnly))
+      setCommentsByGiftOptionId(DEMO_COMMENTS_BY_OPTION_ID)
+      setAlternativeRequests(DEMO_ALTERNATIVE_REQUESTS)
+      setOverlay('none')
+      return
+    }
     if (!navigator.onLine) {
       setOverlay('offline')
       return
@@ -50,6 +79,9 @@ export function GiftOptionsSection({
     try {
       const result = await listGiftOptions(giftRequestId)
       setItems(result.items)
+      // Comments and requests: empty until T-03-06 Result — no endpoint guessed.
+      setCommentsByGiftOptionId({})
+      setAlternativeRequests([])
       setOverlay('none')
     } catch (error) {
       if (error instanceof NetworkError) {
@@ -58,7 +90,7 @@ export function GiftOptionsSection({
       }
       setOverlay('error')
     }
-  }, [giftRequestId])
+  }, [commentsDemo, giftRequestId, paidReadOnly])
 
   useEffect(() => {
     void load()
@@ -175,6 +207,8 @@ export function GiftOptionsSection({
     )
   }
 
+  const showManageActions = canManageGiftOptions(status)
+
   return (
     <>
       <section className="flex w-full max-w-[752px] flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
@@ -189,6 +223,8 @@ export function GiftOptionsSection({
           ) : null}
         </div>
 
+        <AlternativeRequestsPanel requests={alternativeRequests} />
+
         {items.length === 0 ? (
           <p className="text-sm leading-5 text-text-secondary">
             No gift options yet.
@@ -197,6 +233,7 @@ export function GiftOptionsSection({
           <div className="flex flex-col gap-3">
             {items.map((option) => {
               const selected = paidReadOnly && option.selected
+              const comments = commentsByGiftOptionId[option.id] ?? []
               return (
                 <article
                   key={option.id}
@@ -206,11 +243,15 @@ export function GiftOptionsSection({
                       : 'border-border-default'
                   }`}
                 >
-                  <AuthenticatedImage
-                    imageUrl={option.image.url}
-                    alt=""
-                    className="size-[120px] shrink-0 rounded-lg object-cover bg-bg-muted"
-                  />
+                  {option.image.url ? (
+                    <AuthenticatedImage
+                      imageUrl={option.image.url}
+                      alt=""
+                      className="size-[120px] shrink-0 rounded-lg object-cover bg-bg-muted"
+                    />
+                  ) : (
+                    <div className="size-[120px] shrink-0 rounded-lg bg-bg-muted" />
+                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <div className="flex items-center gap-4">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -223,11 +264,12 @@ export function GiftOptionsSection({
                           </span>
                         ) : null}
                       </div>
-                      {editable ? (
+                      {showManageActions ? (
                         <div className="flex shrink-0 gap-4 text-sm font-medium leading-5">
                           <button
                             type="button"
-                            className="cursor-pointer border-0 bg-transparent p-0 text-accent-default"
+                            className="cursor-pointer border-0 bg-transparent p-0 text-accent-default disabled:cursor-default disabled:opacity-50"
+                            disabled={commentsDemo}
                             onClick={() => {
                               setEditing(option)
                               setDialog('edit')
@@ -237,7 +279,8 @@ export function GiftOptionsSection({
                           </button>
                           <button
                             type="button"
-                            className="cursor-pointer border-0 bg-transparent p-0 text-text-secondary"
+                            className="cursor-pointer border-0 bg-transparent p-0 text-text-secondary disabled:cursor-default disabled:opacity-50"
+                            disabled={commentsDemo}
                             onClick={() => setDeleting(option)}
                           >
                             Delete
@@ -251,6 +294,7 @@ export function GiftOptionsSection({
                     <p className="text-sm leading-5 text-text-secondary">
                       {option.description}
                     </p>
+                    <GiftOptionCommentsPanel comments={comments} />
                   </div>
                 </article>
               )
@@ -258,14 +302,15 @@ export function GiftOptionsSection({
           </div>
         )}
 
-        {showAdd ? (
+        {showAddButton ? (
           <button
             type="button"
+            disabled={commentsDemo}
             onClick={() => {
               setEditing(null)
               setDialog('create')
             }}
-            className="flex h-12 w-fit cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary"
+            className="flex h-12 w-fit cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-50"
           >
             Add gift option
           </button>
