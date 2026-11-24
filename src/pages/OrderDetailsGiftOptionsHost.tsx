@@ -1,5 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import {
+  buildDemoChatMessages,
+  buildDemoDeletedGiftMessage,
+  buildDemoFailedMessage,
+  buildDemoSharedGiftMessage,
+  DEMO_ADMIN_EMAIL,
+  DEMO_CHAT_CUSTOMER_NAME,
+  DEMO_CHAT_ORDER_ID,
+  DEMO_SHAREABLE_OPTIONS,
+} from '../components/chat/chatDemo'
+import { ChatPanel } from '../components/chat/ChatPanel'
+import { ChatSection } from '../components/chat/ChatSection'
+import type { ChatGiftOptionRef, ChatMessage } from '../components/chat/types'
 import { GiftOptionsSection } from '../components/gift-options/GiftOptionsSection'
 import { ReviewSection } from '../components/reviews/ReviewSection'
 import {
@@ -86,11 +99,26 @@ function seedOrderReview(value: string | null): AdminReview | null {
   return null
 }
 
+function seedChatMessages(chatDemo: string | null): ChatMessage[] {
+  if (chatDemo === 'empty') {
+    return []
+  }
+  const base = buildDemoChatMessages()
+  if (chatDemo === 'share') {
+    return [...base, buildDemoSharedGiftMessage()]
+  }
+  if (chatDemo === 'deleted') {
+    return [...base, buildDemoDeletedGiftMessage()]
+  }
+  if (chatDemo === 'failed') {
+    return [...base, buildDemoFailedMessage()]
+  }
+  return base
+}
+
 /**
  * Host for section tasks until T-10-12.
- * /orders/:giftRequestId?status=Registered
- * &demo=comments | timeline | …
- * &review=waiting|approved|rejected (default: Not yet)
+ * ?status= · ?review= · ?chat=empty|share|deleted|failed · ?unread=1 · ?share=0
  */
 export function OrderDetailsGiftOptionsHost() {
   const { giftRequestId = '' } = useParams()
@@ -99,6 +127,9 @@ export function OrderDetailsGiftOptionsHost() {
   const demo = params.get('demo')
   const commentsDemo = demo === 'comments'
   const timelineFixture = demoTimelineForQuery(demo)
+  const chatDemo = params.get('chat')
+  const startUnread = params.get('unread') === '1'
+  const noShareOptions = params.get('share') === '0'
 
   const initialPickup = useMemo(
     () => seedPickup(initialStatus),
@@ -118,9 +149,32 @@ export function OrderDetailsGiftOptionsHost() {
   const [orderReview, setOrderReview] = useState<AdminReview | null>(() =>
     seedOrderReview(params.get('review')),
   )
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatUnread, setChatUnread] = useState(startUnread)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
+    seedChatMessages(chatDemo),
+  )
+  const shareOptions: ChatGiftOptionRef[] = noShareOptions
+    ? []
+    : DEMO_SHAREABLE_OPTIONS
 
   const timelineStatus = timelineFixture?.status ?? status
   const timelineReached = timelineFixture?.reachedAt ?? reachedAt
+
+  function appendAdminText(text: string, failed = false) {
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: `local-${Date.now()}`,
+        kind: 'text',
+        sender: 'admin',
+        adminEmail: DEMO_ADMIN_EMAIL,
+        text,
+        sentAt: new Date().toISOString(),
+        failed,
+      },
+    ])
+  }
 
   return (
     <AdminShell title="Order details" currentNav="Orders">
@@ -133,9 +187,8 @@ export function OrderDetailsGiftOptionsHost() {
             Back to orders
           </Link>
           <p className="mt-2 text-sm text-text-secondary">
-            Sections: gift options, status, timeline, review (T-06-05). Full
-            page: T-10-12. ?status= · ?review=waiting|approved|rejected ·
-            Reviews list: /reviews
+            Sections incl. chat (T-07-05). Full page: T-10-12. ?unread=1 ·
+            ?chat=empty|share|deleted|failed · ?share=0 · ?status=Completed
             {commentsDemo ? ' · demo=comments' : null}
             {timelineFixture ? ` · demo=${demo}` : null}
           </p>
@@ -159,29 +212,86 @@ export function OrderDetailsGiftOptionsHost() {
                 }}
               />
             </div>
-            <StatusSection
-              status={status}
-              pickupAddress={pickupAddress}
-              pickupNote={pickupNote}
-              onChange={(next) => {
-                setStatus(next.status)
-                setPickupAddress(next.pickupAddress)
-                setPickupNote(next.pickupNote)
-                setReachedAt((prev) => ({
-                  ...prev,
-                  [next.status]: new Date().toISOString(),
-                }))
-              }}
-            />
-            <TimelineSection
-              status={timelineStatus}
-              reachedAt={timelineReached}
-            />
+            <div className="flex w-full max-w-[360px] flex-col gap-6">
+              <StatusSection
+                status={status}
+                pickupAddress={pickupAddress}
+                pickupNote={pickupNote}
+                onChange={(next) => {
+                  setStatus(next.status)
+                  setPickupAddress(next.pickupAddress)
+                  setPickupNote(next.pickupNote)
+                  setReachedAt((prev) => ({
+                    ...prev,
+                    [next.status]: new Date().toISOString(),
+                  }))
+                }}
+              />
+              <ChatSection
+                unread={chatUnread}
+                onOpenChat={() => {
+                  setChatOpen(true)
+                  setChatUnread(false)
+                }}
+              />
+              <TimelineSection
+                status={timelineStatus}
+                reachedAt={timelineReached}
+              />
+            </div>
           </div>
         ) : (
           <p className="text-sm text-text-secondary">Missing gift request id.</p>
         )}
       </div>
+
+      {chatOpen ? (
+        <ChatPanel
+          orderId={DEMO_CHAT_ORDER_ID}
+          customerName={DEMO_CHAT_CUSTOMER_NAME}
+          status={status}
+          messages={chatMessages}
+          giftOptions={shareOptions}
+          onClose={() => setChatOpen(false)}
+          onSendText={(text) => appendAdminText(text)}
+          onSendPhoto={(file) => {
+            const url = URL.createObjectURL(file)
+            setChatMessages((prev) => [
+              ...prev,
+              {
+                id: `local-photo-${Date.now()}`,
+                kind: 'photo',
+                sender: 'admin',
+                adminEmail: DEMO_ADMIN_EMAIL,
+                photoUrl: url,
+                sentAt: new Date().toISOString(),
+              },
+            ])
+          }}
+          onShareGiftOption={(option) => {
+            setChatMessages((prev) => [
+              ...prev,
+              {
+                id: `local-share-${Date.now()}`,
+                kind: 'gift-option',
+                sender: 'admin',
+                adminEmail: DEMO_ADMIN_EMAIL,
+                giftOption: { ...option },
+                sentAt: new Date().toISOString(),
+              },
+            ])
+          }}
+          onTryAgain={(messageId) => {
+            setChatMessages((prev) =>
+              prev.map((message) =>
+                message.id === messageId && 'failed' in message
+                  ? { ...message, failed: false }
+                  : message,
+              ),
+            )
+          }}
+        />
+      ) : null}
     </AdminShell>
   )
 }

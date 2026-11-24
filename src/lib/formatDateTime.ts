@@ -75,3 +75,27 @@ export function formatReviewSentDay(iso: string): string {
   const year = date.getFullYear()
   return `${day} ${month} ${year}`
 }
+
+/** Chat message time in the browser time zone, e.g. "14:20". */
+export function formatChatTime(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return iso
+  }
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+/** Chat date separator, e.g. "24 November 2026" (browser local day). */
+export function formatChatDay(iso: string): string {
+  return formatReviewSentDay(iso)
+}
+
+export function chatDayKey(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return iso
+  }
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+}
