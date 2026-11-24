@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { HomePlaceholder } from './pages/HomePlaceholder'
 import { LoginPage } from './pages/LoginPage'
 import { OrderDetailsGiftOptionsHost } from './pages/OrderDetailsGiftOptionsHost'
+import { ReviewsPage } from './pages/ReviewsPage'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<HomePlaceholder />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
             <Route
               path="/orders/:giftRequestId"
               element={<OrderDetailsGiftOptionsHost />}

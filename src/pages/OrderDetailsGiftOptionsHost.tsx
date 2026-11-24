@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { GiftOptionsSection } from '../components/gift-options/GiftOptionsSection'
+import { ReviewSection } from '../components/reviews/ReviewSection'
+import {
+  DEMO_ORDER_REVIEW_APPROVED,
+  DEMO_ORDER_REVIEW_REJECTED,
+  DEMO_ORDER_REVIEW_WAITING,
+} from '../components/reviews/reviewsDemo'
+import type { AdminReview, ReviewState } from '../components/reviews/types'
 import { StatusSection } from '../components/status/StatusSection'
 import { AdminShell } from '../components/standard/AdminShell'
 import { TimelineSection } from '../components/timeline/TimelineSection'
@@ -66,10 +73,24 @@ function seedPickup(status: GiftRequestStatus): {
   return { address: null, note: null }
 }
 
+function seedOrderReview(value: string | null): AdminReview | null {
+  if (value === 'waiting') {
+    return { ...DEMO_ORDER_REVIEW_WAITING }
+  }
+  if (value === 'approved') {
+    return { ...DEMO_ORDER_REVIEW_APPROVED }
+  }
+  if (value === 'rejected') {
+    return { ...DEMO_ORDER_REVIEW_REJECTED }
+  }
+  return null
+}
+
 /**
- * Host for T-03-07 / T-03-08 / T-05-08 / T-05-09 until T-10-12.
+ * Host for section tasks until T-10-12.
  * /orders/:giftRequestId?status=Registered
- * &demo=comments | timeline | timeline-canceled | timeline-in-progress
+ * &demo=comments | timeline | …
+ * &review=waiting|approved|rejected (default: Not yet)
  */
 export function OrderDetailsGiftOptionsHost() {
   const { giftRequestId = '' } = useParams()
@@ -94,12 +115,15 @@ export function OrderDetailsGiftOptionsHost() {
   const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(() =>
     seedReachedAt(initialStatus),
   )
+  const [orderReview, setOrderReview] = useState<AdminReview | null>(() =>
+    seedOrderReview(params.get('review')),
+  )
 
   const timelineStatus = timelineFixture?.status ?? status
   const timelineReached = timelineFixture?.reachedAt ?? reachedAt
 
   return (
-    <AdminShell title="Order details">
+    <AdminShell title="Order details" currentNav="Orders">
       <div className="flex flex-col gap-6 p-8">
         <div>
           <Link
@@ -109,20 +133,32 @@ export function OrderDetailsGiftOptionsHost() {
             Back to orders
           </Link>
           <p className="mt-2 text-sm text-text-secondary">
-            Sections: gift options (T-03-07/08), status (T-05-08), timeline
-            (T-05-09). Full page: T-10-12. Start with ?status=. Moves and cancel
-            update local UI until T-05-05 / T-05-06.
-            {commentsDemo ? ' demo=comments.' : null}
-            {timelineFixture ? ` Fixed timeline fixture demo=${demo}.` : null}
+            Sections: gift options, status, timeline, review (T-06-05). Full
+            page: T-10-12. ?status= · ?review=waiting|approved|rejected ·
+            Reviews list: /reviews
+            {commentsDemo ? ' · demo=comments' : null}
+            {timelineFixture ? ` · demo=${demo}` : null}
           </p>
         </div>
         {giftRequestId ? (
           <div className="flex flex-wrap items-start gap-6">
-            <GiftOptionsSection
-              giftRequestId={giftRequestId}
-              status={status}
-              commentsDemo={commentsDemo}
-            />
+            <div className="flex min-w-0 flex-1 flex-col gap-6">
+              <GiftOptionsSection
+                giftRequestId={giftRequestId}
+                status={status}
+                commentsDemo={commentsDemo}
+              />
+              <ReviewSection
+                review={orderReview}
+                onDecide={(reviewId, nextState) => {
+                  setOrderReview((prev) =>
+                    prev && prev.id === reviewId
+                      ? { ...prev, state: nextState as ReviewState }
+                      : prev,
+                  )
+                }}
+              />
+            </div>
             <StatusSection
               status={status}
               pickupAddress={pickupAddress}

@@ -19,6 +19,8 @@
   --color-success-default: #0f7b6c;
   --color-success-subtle: #ddedea;
   --color-warning-subtle: #fbf3db;
+  --color-warning-default: #dfab01;
+  --color-danger-subtle: #fbe4e4;
 
   --color-status-registered: #ddebf1;
   --color-status-in-progress: #eae4f2;

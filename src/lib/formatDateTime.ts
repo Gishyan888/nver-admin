@@ -60,3 +60,18 @@ export function formatBrowserDateTime(iso: string): string {
     date.getMinutes(),
   )
 }
+
+/**
+ * Review "Sent" day as on the frames, e.g. "24 November 2026".
+ * Time zone is not decided on T-06-05 — browser local calendar day is used.
+ */
+export function formatReviewSentDay(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) {
+    return iso
+  }
+  const day = date.getDate()
+  const month = MONTHS[date.getMonth()]
+  const year = date.getFullYear()
+  return `${day} ${month} ${year}`
+}

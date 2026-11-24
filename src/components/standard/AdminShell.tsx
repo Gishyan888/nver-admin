@@ -1,39 +1,50 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+
+export type AdminNavItem = 'Orders' | 'Users' | 'Reviews'
 
 type MenuItemProps = {
-  label: string
+  label: AdminNavItem | 'Log out'
   current?: boolean
+  to?: string
 }
 
 /**
  * Stand-in menu and page header from the standard-state frames (T-01-09).
- * Real menu / header come in their own tasks; pages keep using this shell until then.
+ * Real menu / header come in T-10-10; pages keep using this shell until then.
  */
-function MenuItem({ label, current = false }: MenuItemProps) {
+function MenuItem({ label, current = false, to }: MenuItemProps) {
+  const className = `flex h-9 w-full items-center rounded-lg px-3 ${
+    current ? 'bg-accent-subtle' : ''
+  }`
+  const textClass = `text-sm font-medium leading-5 whitespace-nowrap ${
+    current ? 'text-text-primary' : 'text-border-default'
+  }`
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        <span className={textClass}>{label}</span>
+      </Link>
+    )
+  }
+
   return (
-    <div
-      className={`flex h-9 w-full items-center rounded-lg px-3 ${
-        current ? 'bg-accent-subtle' : ''
-      }`}
-    >
-      <span
-        className={`text-sm font-medium leading-5 whitespace-nowrap ${
-          current ? 'text-text-primary' : 'text-border-default'
-        }`}
-      >
-        {label}
-      </span>
+    <div className={className}>
+      <span className={textClass}>{label}</span>
     </div>
   )
 }
 
 type AdminShellProps = {
   title?: string
+  currentNav?: AdminNavItem
   children: ReactNode
 }
 
 export function AdminShell({
   title = '[Page title]',
+  currentNav = 'Orders',
   children,
 }: AdminShellProps) {
   return (
@@ -46,9 +57,17 @@ export function AdminShell({
             </p>
           </div>
           <nav className="flex w-full flex-col gap-1">
-            <MenuItem label="Orders" current />
-            <MenuItem label="Users" />
-            <MenuItem label="Reviews" />
+            <MenuItem
+              label="Orders"
+              current={currentNav === 'Orders'}
+              to="/"
+            />
+            <MenuItem label="Users" current={currentNav === 'Users'} />
+            <MenuItem
+              label="Reviews"
+              current={currentNav === 'Reviews'}
+              to="/reviews"
+            />
           </nav>
         </div>
         <div className="flex w-full flex-col">
