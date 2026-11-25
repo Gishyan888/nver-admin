@@ -1,12 +1,12 @@
-/** UI model until T-03-06 Result fixes the API fields. */
+/** Comment as shown under a gift option (T-03-06 / T-03-08). */
 export type GiftOptionComment = {
   id: string
   text: string
-  /** ISO 8601; shown as "24 November 2026, 14:20". */
+  /** ISO 8601 UTC; shown as "24 November 2026, 14:20" (time zone not decided). */
   createdAt: string
 }
 
-/** UI model until T-03-06 Result fixes the API fields. */
+/** One "Ask for alternatives" entry (T-03-06 / T-03-08). */
 export type AlternativeRequest = {
   id: string
   /** Null or empty → "No note". */

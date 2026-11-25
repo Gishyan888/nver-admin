@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   createGiftOption,
   deleteGiftOption,
+  listAlternativesRequests,
+  listGiftOptionComments,
   listGiftOptions,
   updateGiftOption,
   type GiftOption,
@@ -32,7 +34,7 @@ type GiftOptionsSectionProps = {
   giftRequestId: string
   status: GiftRequestStatus
   /**
-   * Frame fixtures for comments/requests until T-03-06 Result.
+   * Frame fixtures for comments/requests (QA without the API).
    * Skips the gift-options API and uses demo items.
    */
   commentsDemo?: boolean
@@ -78,10 +80,19 @@ export function GiftOptionsSection({
     setOverlay('loading')
     try {
       const result = await listGiftOptions(giftRequestId)
+      const [alternatives, ...commentLists] = await Promise.all([
+        listAlternativesRequests(giftRequestId),
+        ...result.items.map((option) =>
+          listGiftOptionComments(giftRequestId, option.id),
+        ),
+      ])
+      const commentsById: Record<string, GiftOptionComment[]> = {}
+      result.items.forEach((option, index) => {
+        commentsById[option.id] = commentLists[index]?.items ?? []
+      })
       setItems(result.items)
-      // Comments and requests: empty until T-03-06 Result — no endpoint guessed.
-      setCommentsByGiftOptionId({})
-      setAlternativeRequests([])
+      setCommentsByGiftOptionId(commentsById)
+      setAlternativeRequests(alternatives.items)
       setOverlay('none')
     } catch (error) {
       if (error instanceof NetworkError) {

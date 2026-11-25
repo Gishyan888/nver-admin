@@ -77,6 +77,43 @@ export async function deleteGiftOption(
   })
 }
 
+/** Admin comment on a gift option (T-03-06). */
+export type GiftOptionCommentDto = {
+  id: string
+  text: string
+  createdAt: string
+}
+
+export type GiftOptionCommentListResponse = {
+  items: GiftOptionCommentDto[]
+}
+
+/** Admin request for alternatives (T-03-06). */
+export type AlternativesRequestDto = {
+  id: string
+  note: string | null
+  createdAt: string
+}
+
+export type AlternativesRequestListResponse = {
+  items: AlternativesRequestDto[]
+}
+
+export async function listGiftOptionComments(
+  giftRequestId: string,
+  giftOptionId: string,
+) {
+  return apiRequest<GiftOptionCommentListResponse>(
+    `${basePath(giftRequestId)}/${giftOptionId}/comments`,
+  )
+}
+
+export async function listAlternativesRequests(giftRequestId: string) {
+  return apiRequest<AlternativesRequestListResponse>(
+    `/api/v1/admin/gift-requests/${giftRequestId}/alternatives-requests`,
+  )
+}
+
 /** Absolute or same-origin path for an image url from the API. */
 export function giftOptionImagePath(imageUrl: string) {
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
