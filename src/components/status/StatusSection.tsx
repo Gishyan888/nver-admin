@@ -1,5 +1,17 @@
-import { useState } from 'react'
-import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  cancelAdminGiftRequest,
+  getAdminGiftRequestStatus,
+  patchAdminPickup,
+  postAdminGiftRequestStatus,
+  type AdminGiftRequestStatusResponse,
+} from '../../api/giftRequestStatus'
+import { ApiError, NetworkError } from '../../api/types'
+import {
+  giftRequestStatusFromApi,
+  giftRequestStatusToApi,
+  type GiftRequestStatus,
+} from '../../lib/giftRequestStatus'
 import {
   canCancelGiftRequest,
   canEditPickupAddress,
@@ -8,6 +20,8 @@ import {
   showsPickupAddressContent,
   showsPickupAddressRow,
 } from '../../lib/statusControl'
+import { timelineReachedAtFromApi } from '../timeline/timelineFromApi'
+import type { TimelineReachedAt } from '../timeline/types'
 import { StandardContentState } from '../standard/StandardContentState'
 import { CancelGiftRequestDialog } from './CancelGiftRequestDialog'
 import { EditPickupAddressDialog } from './EditPickupAddressDialog'
@@ -20,37 +34,220 @@ export type StatusSectionChange = {
   status: GiftRequestStatus
   pickupAddress: string | null
   pickupNote: string | null
+  reachedAt?: TimelineReachedAt
 }
 
 type StatusSectionProps = {
+  giftRequestId: string
   status: GiftRequestStatus
   pickupAddress?: string | null
   pickupNote?: string | null
-  /**
-   * Local UI updates until T-05-05 / T-05-06 Results.
-   * Parent keeps status in sync (e.g. with the timeline).
-   */
   onChange: (next: StatusSectionChange) => void
-  overlay?: SectionOverlay
+  /** Skip the status API (frame / timeline demos). */
+  fixturesOnly?: boolean
 }
 
 type DialogKind = 'move' | 'edit-pickup' | 'cancel' | null
 
+function changeFromStatusResponse(
+  result: AdminGiftRequestStatusResponse,
+): StatusSectionChange | null {
+  const status = giftRequestStatusFromApi(result.status)
+  if (!status) {
+    return null
+  }
+  return {
+    status,
+    pickupAddress: result.pickup?.address ?? null,
+    pickupNote: result.pickup?.note ?? null,
+    reachedAt: timelineReachedAtFromApi(result.timeline),
+  }
+}
+
 export function StatusSection({
+  giftRequestId,
   status,
   pickupAddress = null,
   pickupNote = null,
   onChange,
-  overlay = 'none',
+  fixturesOnly = false,
 }: StatusSectionProps) {
   const [dialog, setDialog] = useState<DialogKind>(null)
   const [busy, setBusy] = useState(false)
+  const [overlay, setOverlay] = useState<SectionOverlay>(
+    fixturesOnly ? 'none' : 'loading',
+  )
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
   const next = nextManualStatus(status)
   const showCancel = canCancelGiftRequest(status)
   const showPickupRow = showsPickupAddressRow(status, Boolean(pickupAddress))
   const showPickupContent = showsPickupAddressContent(status)
   const showEdit = canEditPickupAddress(status)
+
+  const load = useCallback(async () => {
+    if (fixturesOnly) {
+      setOverlay('none')
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setOverlay('loading')
+    try {
+      const result = await getAdminGiftRequestStatus(giftRequestId)
+      const change = changeFromStatusResponse(result)
+      if (!change) {
+        setOverlay('error')
+        return
+      }
+      onChangeRef.current(change)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      setOverlay('error')
+    }
+  }, [fixturesOnly, giftRequestId])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  function applyLocalChange(nextChange: StatusSectionChange) {
+    onChange(nextChange)
+    setDialog(null)
+  }
+
+  async function handleMove(input?: { address: string; note: string }) {
+    if (!next) {
+      return
+    }
+    if (fixturesOnly) {
+      applyLocalChange({
+        status: next,
+        pickupAddress: input?.address ?? pickupAddress,
+        pickupNote: input?.note ?? pickupNote,
+      })
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setBusy(true)
+    try {
+      const body: {
+        status: string
+        pickupAddress?: string
+        pickupNote?: string | null
+      } = {
+        status: giftRequestStatusToApi(next),
+      }
+      if (next === 'Ready for Pickup') {
+        body.pickupAddress = input?.address ?? ''
+        body.pickupNote = input?.note?.trim() ? input.note.trim() : null
+      }
+      const result = await postAdminGiftRequestStatus(giftRequestId, body)
+      const change = changeFromStatusResponse(result)
+      if (!change) {
+        setOverlay('error')
+        return
+      }
+      onChange(change)
+      setDialog(null)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      if (error instanceof ApiError) {
+        setOverlay('error')
+        return
+      }
+      setOverlay('error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleSavePickup(input: { address: string; note: string }) {
+    if (fixturesOnly) {
+      applyLocalChange({
+        status,
+        pickupAddress: input.address,
+        pickupNote: input.note || null,
+      })
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setBusy(true)
+    try {
+      const result = await patchAdminPickup(giftRequestId, {
+        pickupAddress: input.address,
+        pickupNote: input.note.trim() ? input.note.trim() : null,
+      })
+      const change = changeFromStatusResponse(result)
+      if (!change) {
+        setOverlay('error')
+        return
+      }
+      onChange(change)
+      setDialog(null)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      setOverlay('error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleCancel() {
+    if (fixturesOnly) {
+      applyLocalChange({
+        status: 'Canceled',
+        pickupAddress,
+        pickupNote,
+      })
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setBusy(true)
+    try {
+      const result = await cancelAdminGiftRequest(giftRequestId)
+      onChange({
+        status: 'Canceled',
+        pickupAddress,
+        pickupNote,
+        reachedAt: { Canceled: result.canceledAt },
+      })
+      setDialog(null)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      setOverlay('error')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   if (overlay === 'loading') {
     return (
@@ -66,16 +263,6 @@ export function StatusSection({
         <StandardContentState kind={overlay === 'offline' ? 'offline' : 'error'} />
       </div>
     )
-  }
-
-  function applyChange(nextChange: StatusSectionChange) {
-    setBusy(true)
-    try {
-      onChange(nextChange)
-      setDialog(null)
-    } finally {
-      setBusy(false)
-    }
   }
 
   return (
@@ -159,11 +346,7 @@ export function StatusSection({
           busy={busy}
           onGoBack={() => setDialog(null)}
           onMove={(input) => {
-            applyChange({
-              status: next,
-              pickupAddress: input?.address ?? pickupAddress,
-              pickupNote: input?.note ?? pickupNote,
-            })
+            void handleMove(input)
           }}
         />
       ) : null}
@@ -175,11 +358,7 @@ export function StatusSection({
           busy={busy}
           onGoBack={() => setDialog(null)}
           onSave={(input) => {
-            applyChange({
-              status,
-              pickupAddress: input.address,
-              pickupNote: input.note || null,
-            })
+            void handleSavePickup(input)
           }}
         />
       ) : null}
@@ -189,11 +368,7 @@ export function StatusSection({
           busy={busy}
           onKeepIt={() => setDialog(null)}
           onCancelGiftRequest={() => {
-            applyChange({
-              status: 'Canceled',
-              pickupAddress,
-              pickupNote,
-            })
+            void handleCancel()
           }}
         />
       ) : null}

@@ -25,6 +25,20 @@ export function giftRequestStatusFromApi(
   return API_STATUS_TO_LABEL[value] ?? null
 }
 
+const LABEL_TO_API_STATUS: Record<GiftRequestStatus, string> = {
+  Registered: 'registered',
+  'In Progress': 'in_progress',
+  Approved: 'approved',
+  Preparing: 'preparing',
+  'Ready for Pickup': 'ready_for_pickup',
+  Completed: 'completed',
+  Canceled: 'canceled',
+}
+
+export function giftRequestStatusToApi(status: GiftRequestStatus): string {
+  return LABEL_TO_API_STATUS[status]
+}
+
 const APPROVED_ONWARD: GiftRequestStatus[] = [
   'Approved',
   'Preparing',

@@ -27,8 +27,55 @@ export type AdminGiftRequestStatusResponse = {
   timeline: ApiTimelineEntry[]
 }
 
+function statusPath(giftRequestId: string) {
+  return `/api/v1/admin/gift-requests/${giftRequestId}/status`
+}
+
 export async function getAdminGiftRequestStatus(giftRequestId: string) {
+  return apiRequest<AdminGiftRequestStatusResponse>(statusPath(giftRequestId))
+}
+
+export type PostAdminStatusBody = {
+  status: ApiGiftRequestStatus | string
+  pickupAddress?: string
+  pickupNote?: string | null
+}
+
+export async function postAdminGiftRequestStatus(
+  giftRequestId: string,
+  body: PostAdminStatusBody,
+) {
+  return apiRequest<AdminGiftRequestStatusResponse>(statusPath(giftRequestId), {
+    method: 'POST',
+    body,
+  })
+}
+
+export type PatchAdminPickupBody = {
+  pickupAddress?: string
+  pickupNote?: string | null
+}
+
+export async function patchAdminPickup(
+  giftRequestId: string,
+  body: PatchAdminPickupBody,
+) {
   return apiRequest<AdminGiftRequestStatusResponse>(
-    `/api/v1/admin/gift-requests/${giftRequestId}/status`,
+    `/api/v1/admin/gift-requests/${giftRequestId}/pickup`,
+    { method: 'PATCH', body },
+  )
+}
+
+export type AdminCancelGiftRequestResponse = {
+  id: string
+  status: 'canceled' | string
+  canceledAt: string
+  payment: unknown
+}
+
+export async function cancelAdminGiftRequest(giftRequestId: string) {
+  return apiRequest<AdminCancelGiftRequestResponse>(
+    `/api/v1/admin/gift-requests/${giftRequestId}/cancel`,
+    { method: 'POST' },
   )
 }

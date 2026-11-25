@@ -155,17 +155,23 @@ export function OrderDetailsPage() {
 
           <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
             <StatusSection
+              giftRequestId={demo.giftRequestId}
               status={status}
               pickupAddress={pickupAddress}
               pickupNote={pickupNote}
+              fixturesOnly={Boolean(timelineDemo)}
               onChange={(next) => {
                 setStatus(next.status)
                 setPickupAddress(next.pickupAddress)
                 setPickupNote(next.pickupNote)
-                setReachedAt((prev) => ({
-                  ...prev,
-                  [next.status]: new Date().toISOString(),
-                }))
+                if (next.reachedAt) {
+                  setReachedAt((prev) => ({ ...prev, ...next.reachedAt }))
+                } else {
+                  setReachedAt((prev) => ({
+                    ...prev,
+                    [next.status]: new Date().toISOString(),
+                  }))
+                }
               }}
             />
             <ChatSection
