@@ -28,30 +28,9 @@ import { StatusSection } from '../components/status/StatusSection'
 import { AdminShell } from '../components/standard/AdminShell'
 import { StandardContentState } from '../components/standard/StandardContentState'
 import { TimelineSection } from '../components/timeline/TimelineSection'
-import {
-  DEMO_TIMELINE_IN_PROGRESS,
-  DEMO_TIMELINE_PREPARING,
-} from '../components/timeline/timelineDemo'
+import { demoTimelineForQuery } from '../components/timeline/timelineDemo'
 import type { TimelineReachedAt } from '../components/timeline/types'
 import type { GiftRequestStatus } from '../lib/giftRequestStatus'
-import { TIMELINE_STAGES } from '../components/timeline/types'
-
-function seedReachedAt(status: GiftRequestStatus): TimelineReachedAt {
-  if (status === 'Preparing') {
-    return { ...DEMO_TIMELINE_PREPARING.reachedAt }
-  }
-  if (status === 'In Progress') {
-    return { ...DEMO_TIMELINE_IN_PROGRESS.reachedAt }
-  }
-  const reached: TimelineReachedAt = {}
-  for (const stage of TIMELINE_STAGES) {
-    reached[stage] = '2026-11-22T10:12:00.000Z'
-    if (stage === status) {
-      break
-    }
-  }
-  return reached
-}
 
 function parsePayment(value: string | null): PaymentState | null {
   if (value === 'not-yet') {
@@ -105,11 +84,14 @@ export function OrderDetailsPage() {
   )
   const paymentOverride = parsePayment(params.get('payment'))
 
-  const [status, setStatus] = useState<GiftRequestStatus>(demo.status)
+  const timelineDemo = demoTimelineForQuery(params.get('demo'))
+  const [status, setStatus] = useState<GiftRequestStatus>(
+    () => timelineDemo?.status ?? demo.status,
+  )
   const [pickupAddress, setPickupAddress] = useState<string | null>(null)
   const [pickupNote, setPickupNote] = useState<string | null>(null)
-  const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(() =>
-    seedReachedAt(demo.status),
+  const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(
+    () => timelineDemo?.reachedAt ?? {},
   )
   const [orderReview, setOrderReview] = useState<AdminReview | null>(() =>
     params.get('review') === 'waiting'
@@ -193,7 +175,12 @@ export function OrderDetailsPage() {
                 setChatUnread(false)
               }}
             />
-            <TimelineSection status={status} reachedAt={reachedAt} />
+            <TimelineSection
+              giftRequestId={demo.giftRequestId}
+              status={status}
+              reachedAt={reachedAt}
+              fixturesOnly={Boolean(timelineDemo)}
+            />
             <PaymentSection payment={payment} />
             <InternalNotesSection
               seedDemoNotes={params.get('demo') !== 'notes-empty'}

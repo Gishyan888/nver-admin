@@ -1,16 +1,29 @@
+import { useCallback, useEffect, useState } from 'react'
+import { getAdminGiftRequestStatus } from '../../api/giftRequestStatus'
+import { ApiError, NetworkError } from '../../api/types'
 import { formatBrowserDateTime } from '../../lib/formatDateTime'
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
 import { StandardContentState } from '../standard/StandardContentState'
 import { buildTimelineStages } from './buildTimelineStages'
-import type { TimelineReachedAt, TimelineStageKind, TimelineStageView } from './types'
+import { timelineReachedAtFromApi } from './timelineFromApi'
+import type {
+  TimelineReachedAt,
+  TimelineStageKind,
+  TimelineStageView,
+} from './types'
 
 type SectionOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type TimelineSectionProps = {
+  giftRequestId: string
   status: GiftRequestStatus
-  /** ISO 8601 per stage — until T-05-05 Result, from fixtures only. */
-  reachedAt: TimelineReachedAt
-  overlay?: SectionOverlay
+  /**
+   * Local updates after a status move (T-05-08 UI) and demo fixtures.
+   * Merged over the API timeline so a move shows at once.
+   */
+  reachedAt?: TimelineReachedAt
+  /** Skip the status API and use only `reachedAt` (frame demos). */
+  fixturesOnly?: boolean
 }
 
 function StageDot({ kind }: { kind: TimelineStageKind }) {
@@ -97,10 +110,47 @@ function TimelineStageRow({
 }
 
 export function TimelineSection({
+  giftRequestId,
   status,
-  reachedAt,
-  overlay = 'none',
+  reachedAt = {},
+  fixturesOnly = false,
 }: TimelineSectionProps) {
+  const [apiReachedAt, setApiReachedAt] = useState<TimelineReachedAt>({})
+  const [overlay, setOverlay] = useState<SectionOverlay>(
+    fixturesOnly ? 'none' : 'loading',
+  )
+
+  const load = useCallback(async () => {
+    if (fixturesOnly) {
+      setOverlay('none')
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setOverlay('loading')
+    try {
+      const result = await getAdminGiftRequestStatus(giftRequestId)
+      setApiReachedAt(timelineReachedAtFromApi(result.timeline))
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      if (error instanceof ApiError) {
+        setOverlay('error')
+        return
+      }
+      setOverlay('error')
+    }
+  }, [fixturesOnly, giftRequestId])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
   if (overlay === 'loading') {
     return (
       <div className="w-full max-w-[360px] rounded-lg border border-border-default bg-bg-default p-6">
@@ -117,7 +167,11 @@ export function TimelineSection({
     )
   }
 
-  const stages = buildTimelineStages(status, reachedAt)
+  const mergedReachedAt: TimelineReachedAt = {
+    ...apiReachedAt,
+    ...reachedAt,
+  }
+  const stages = buildTimelineStages(status, mergedReachedAt)
 
   return (
     <section className="flex w-full max-w-[360px] flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">

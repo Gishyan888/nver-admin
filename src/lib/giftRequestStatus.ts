@@ -8,6 +8,23 @@ export type GiftRequestStatus =
   | 'Completed'
   | 'Canceled'
 
+/** API snake_case → glossary label (T-05-05). */
+const API_STATUS_TO_LABEL: Record<string, GiftRequestStatus> = {
+  registered: 'Registered',
+  in_progress: 'In Progress',
+  approved: 'Approved',
+  preparing: 'Preparing',
+  ready_for_pickup: 'Ready for Pickup',
+  completed: 'Completed',
+  canceled: 'Canceled',
+}
+
+export function giftRequestStatusFromApi(
+  value: string,
+): GiftRequestStatus | null {
+  return API_STATUS_TO_LABEL[value] ?? null
+}
+
 const APPROVED_ONWARD: GiftRequestStatus[] = [
   'Approved',
   'Preparing',

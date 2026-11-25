@@ -7,7 +7,7 @@ import {
 
 /**
  * Builds the rows for the Timeline section from the current status and
- * reached-at times. No endpoint fields are assumed beyond what the card fixes.
+ * reached-at times (ISO 8601 from T-05-05 timeline).
  */
 export function buildTimelineStages(
   status: GiftRequestStatus,
