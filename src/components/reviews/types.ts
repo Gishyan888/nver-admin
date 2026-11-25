@@ -1,6 +1,6 @@
 export type ReviewState = 'Waiting' | 'Approved' | 'Rejected'
 
-/** UI model until T-06-04 Result. */
+/** Admin review as shown on the Reviews page and order details (T-06-04 / T-06-05). */
 export type AdminReview = {
   id: string
   customerName: string
@@ -8,7 +8,7 @@ export type AdminReview = {
   giftRequestId: string
   rating: 1 | 2 | 3 | 4 | 5
   text: string | null
-  /** ISO 8601 of the day the review was sent. */
+  /** ISO 8601 when the review was sent (createdAt from the API). */
   sentAt: string
   state: ReviewState
 }

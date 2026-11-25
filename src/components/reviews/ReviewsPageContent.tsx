@@ -13,8 +13,18 @@ type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type ReviewsPageContentProps = {
   reviews: AdminReview[]
-  onDecide: (reviewId: string, state: Exclude<ReviewState, 'Waiting'>) => void
+  total: number
+  /** 1-based page index. */
+  page: number
+  onPageChange: (page: number) => void
+  onDecide: (
+    reviewId: string,
+    state: Exclude<ReviewState, 'Waiting'>,
+  ) => void | Promise<void>
+  busy?: boolean
   overlay?: PageOverlay
+  /** When true, `reviews` is already one server page; otherwise client-paged. */
+  serverPaged?: boolean
 }
 
 type PendingDecision = {
@@ -24,21 +34,32 @@ type PendingDecision = {
 
 export function ReviewsPageContent({
   reviews,
+  total,
+  page,
+  onPageChange,
   onDecide,
+  busy = false,
   overlay = 'none',
+  serverPaged = false,
 }: ReviewsPageContentProps) {
-  const [page, setPage] = useState(0)
   const [pending, setPending] = useState<PendingDecision | null>(null)
+  const [confirming, setConfirming] = useState(false)
 
-  const sorted = useMemo(() => sortReviewsForAdmin(reviews), [reviews])
-  const pageCount = Math.max(1, Math.ceil(sorted.length / REVIEWS_PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const pageRows = sorted.slice(
-    safePage * REVIEWS_PAGE_SIZE,
-    safePage * REVIEWS_PAGE_SIZE + REVIEWS_PAGE_SIZE,
+  const sorted = useMemo(
+    () => (serverPaged ? reviews : sortReviewsForAdmin(reviews)),
+    [reviews, serverPaged],
   )
-  const isFirst = safePage === 0
-  const isLast = safePage >= pageCount - 1 || sorted.length === 0
+
+  const pageCount = Math.max(1, Math.ceil(total / REVIEWS_PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), pageCount)
+  const pageRows = serverPaged
+    ? sorted
+    : sorted.slice(
+        (safePage - 1) * REVIEWS_PAGE_SIZE,
+        (safePage - 1) * REVIEWS_PAGE_SIZE + REVIEWS_PAGE_SIZE,
+      )
+  const isFirst = safePage <= 1
+  const isLast = safePage >= pageCount || total === 0
 
   if (overlay === 'loading') {
     return <StandardContentState kind="loading" />
@@ -49,7 +70,7 @@ export function ReviewsPageContent({
     )
   }
 
-  if (sorted.length === 0) {
+  if (total === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <p className="text-base leading-6 text-text-secondary">No reviews yet.</p>
@@ -120,19 +141,21 @@ export function ReviewsPageContent({
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
+                          disabled={busy}
                           onClick={() =>
                             setPending({ reviewId: review.id, kind: 'approve' })
                           }
-                          className="flex h-9 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium text-text-on-accent"
+                          className="flex h-9 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium text-text-on-accent disabled:opacity-60"
                         >
                           Approve
                         </button>
                         <button
                           type="button"
+                          disabled={busy}
                           onClick={() =>
                             setPending({ reviewId: review.id, kind: 'reject' })
                           }
-                          className="flex h-9 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium text-text-primary"
+                          className="flex h-9 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium text-text-primary disabled:opacity-60"
                         >
                           Reject
                         </button>
@@ -149,7 +172,7 @@ export function ReviewsPageContent({
           <button
             type="button"
             disabled={isFirst}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            onClick={() => onPageChange(Math.max(1, safePage - 1))}
             className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
           >
             Previous
@@ -157,7 +180,7 @@ export function ReviewsPageContent({
           <button
             type="button"
             disabled={isLast}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => onPageChange(safePage + 1)}
             className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
           >
             Next
@@ -168,13 +191,21 @@ export function ReviewsPageContent({
       {pending ? (
         <ReviewDecisionDialog
           kind={pending.kind}
+          busy={confirming || busy}
           onGoBack={() => setPending(null)}
           onConfirm={() => {
-            onDecide(
-              pending.reviewId,
-              pending.kind === 'approve' ? 'Approved' : 'Rejected',
-            )
-            setPending(null)
+            void (async () => {
+              setConfirming(true)
+              try {
+                await onDecide(
+                  pending.reviewId,
+                  pending.kind === 'approve' ? 'Approved' : 'Rejected',
+                )
+                setPending(null)
+              } finally {
+                setConfirming(false)
+              }
+            })()
           }}
         />
       ) : null}

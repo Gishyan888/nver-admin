@@ -21,9 +21,10 @@ import { RequestSection } from '../components/order-details/RequestSection'
 import type { OrderDetailsDemo, PaymentState } from '../components/order-details/types'
 import { ReviewSection } from '../components/reviews/ReviewSection'
 import {
+  DEMO_ORDER_REVIEW_APPROVED,
+  DEMO_ORDER_REVIEW_REJECTED,
   DEMO_ORDER_REVIEW_WAITING,
 } from '../components/reviews/reviewsDemo'
-import type { AdminReview, ReviewState } from '../components/reviews/types'
 import { StatusSection } from '../components/status/StatusSection'
 import { AdminShell } from '../components/standard/AdminShell'
 import { StandardContentState } from '../components/standard/StandardContentState'
@@ -93,11 +94,18 @@ export function OrderDetailsPage() {
   const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(
     () => timelineDemo?.reachedAt ?? {},
   )
-  const [orderReview, setOrderReview] = useState<AdminReview | null>(() =>
-    params.get('review') === 'waiting'
-      ? { ...DEMO_ORDER_REVIEW_WAITING }
-      : null,
-  )
+  const reviewParam = params.get('review')
+  const reviewFixture =
+    reviewParam === 'waiting'
+      ? DEMO_ORDER_REVIEW_WAITING
+      : reviewParam === 'approved'
+        ? DEMO_ORDER_REVIEW_APPROVED
+        : reviewParam === 'rejected'
+          ? DEMO_ORDER_REVIEW_REJECTED
+          : reviewParam === 'none'
+            ? null
+            : undefined
+  const reviewFixturesOnly = reviewFixture !== undefined
   const [chatOpen, setChatOpen] = useState(false)
   const [chatUnread, setChatUnread] = useState(params.get('unread') === '1')
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
@@ -142,14 +150,11 @@ export function OrderDetailsPage() {
               commentsDemo={params.get('demo') === 'comments'}
             />
             <ReviewSection
-              review={orderReview}
-              onDecide={(reviewId, nextState) => {
-                setOrderReview((prev) =>
-                  prev && prev.id === reviewId
-                    ? { ...prev, state: nextState as ReviewState }
-                    : prev,
-                )
-              }}
+              giftRequestId={demo.giftRequestId}
+              fixturesOnly={reviewFixturesOnly}
+              fixtureReview={
+                reviewFixturesOnly ? (reviewFixture ?? null) : null
+              }
             />
           </div>
 
