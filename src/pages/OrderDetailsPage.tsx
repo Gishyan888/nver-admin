@@ -283,9 +283,9 @@ export function OrderDetailsPage() {
             />
             <PaymentSection payment={payment} />
             <InternalNotesSection
-              seedDemoNotes={
-                fixturesOnly && params.get('demo') !== 'notes-empty'
-              }
+              giftRequestId={activeId}
+              fixturesOnly={fixturesOnly}
+              seedDemoNotes={params.get('demo') !== 'notes-empty'}
             />
           </div>
         </div>
