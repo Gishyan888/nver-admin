@@ -85,6 +85,8 @@ export function RequestSection({ answers }: RequestSectionProps) {
                   <a
                     key={link.href}
                     href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-base leading-6 text-accent-default"
                   >
                     {link.label}
