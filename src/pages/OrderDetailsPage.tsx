@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { getAdminGiftRequest } from '../api/giftRequests'
+import { NetworkError } from '../api/types'
 import {
   buildDemoChatMessages,
   DEMO_ADMIN_EMAIL,
@@ -10,15 +12,19 @@ import { ChatSection } from '../components/chat/ChatSection'
 import type { ChatMessage } from '../components/chat/types'
 import { GiftOptionsSection } from '../components/gift-options/GiftOptionsSection'
 import { GiftingTierSection } from '../components/order-details/GiftingTierSection'
+import { InternalNotesSection } from '../components/order-details/InternalNotesSection'
+import { orderDetailsFromApi } from '../components/order-details/mapOrderDetails'
 import { OrderDetailsHeader } from '../components/order-details/OrderDetailsHeader'
 import {
   DEMO_ORDER_DETAILS_NEW,
   DEMO_ORDER_DETAILS_PAID,
 } from '../components/order-details/orderDetailsDemo'
-import { InternalNotesSection } from '../components/order-details/InternalNotesSection'
 import { PaymentSection } from '../components/order-details/PaymentSection'
 import { RequestSection } from '../components/order-details/RequestSection'
-import type { OrderDetailsDemo, PaymentState } from '../components/order-details/types'
+import type {
+  OrderDetailsDemo,
+  PaymentState,
+} from '../components/order-details/types'
 import { ReviewSection } from '../components/reviews/ReviewSection'
 import {
   DEMO_ORDER_REVIEW_APPROVED,
@@ -32,6 +38,8 @@ import { TimelineSection } from '../components/timeline/TimelineSection'
 import { demoTimelineForQuery } from '../components/timeline/timelineDemo'
 import type { TimelineReachedAt } from '../components/timeline/types'
 import type { GiftRequestStatus } from '../lib/giftRequestStatus'
+
+type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 function parsePayment(value: string | null): PaymentState | null {
   if (value === 'not-yet') {
@@ -71,21 +79,39 @@ function resolveDemo(
 }
 
 /**
- * Order details page (T-10-12). Demo fixtures until T-10-07.
- * ?variant=new · ?payment=not-yet|paid|refunded|refund-failed
- * ?state=loading|error|offline · ?review=waiting · ?unread=1
+ * Order details page (T-10-12).
+ * Fixtures: ?demo=1&variant=new · ?payment=… · ?state=loading|error|offline
+ * · ?review=waiting|approved|rejected|none · ?unread=1
  */
 export function OrderDetailsPage() {
   const { giftRequestId = '' } = useParams()
   const [params] = useSearchParams()
-  const overlay = params.get('state')
+  const stateParam = params.get('state')
+  const timelineDemo = demoTimelineForQuery(params.get('demo'))
+  const fixturesOnly =
+    params.get('demo') === '1' ||
+    params.has('variant') ||
+    params.has('payment') ||
+    Boolean(timelineDemo) ||
+    stateParam === 'loading' ||
+    stateParam === 'error' ||
+    stateParam === 'offline'
+
   const demo = useMemo(
     () => resolveDemo(giftRequestId, params.get('variant')),
     [giftRequestId, params],
   )
   const paymentOverride = parsePayment(params.get('payment'))
 
-  const timelineDemo = demoTimelineForQuery(params.get('demo'))
+  const [overlay, setOverlay] = useState<PageOverlay>(() => {
+    if (stateParam === 'loading' || stateParam === 'error' || stateParam === 'offline') {
+      return stateParam
+    }
+    return fixturesOnly ? 'none' : 'loading'
+  })
+  const [details, setDetails] = useState<OrderDetailsDemo | null>(
+    fixturesOnly ? demo : null,
+  )
   const [status, setStatus] = useState<GiftRequestStatus>(
     () => timelineDemo?.status ?? demo.status,
   )
@@ -94,6 +120,14 @@ export function OrderDetailsPage() {
   const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(
     () => timelineDemo?.reachedAt ?? {},
   )
+  const [hasUnreadMessage, setHasUnreadMessage] = useState(
+    params.get('unread') === '1',
+  )
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
+    buildDemoChatMessages(),
+  )
+
   const reviewParam = params.get('review')
   const reviewFixture =
     reviewParam === 'waiting'
@@ -105,14 +139,58 @@ export function OrderDetailsPage() {
           : reviewParam === 'none'
             ? null
             : undefined
-  const reviewFixturesOnly = reviewFixture !== undefined
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatUnread, setChatUnread] = useState(params.get('unread') === '1')
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
-    buildDemoChatMessages(),
-  )
+  const reviewFixturesOnly = reviewFixture !== undefined || fixturesOnly
 
-  const payment = paymentOverride ?? demo.payment
+  const load = useCallback(async () => {
+    if (
+      stateParam === 'loading' ||
+      stateParam === 'error' ||
+      stateParam === 'offline'
+    ) {
+      setOverlay(stateParam)
+      return
+    }
+    if (fixturesOnly) {
+      setDetails(demo)
+      setStatus(timelineDemo?.status ?? demo.status)
+      setHasUnreadMessage(params.get('unread') === '1')
+      setOverlay('none')
+      return
+    }
+    if (!giftRequestId) {
+      setOverlay('error')
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setOverlay('loading')
+    try {
+      const result = await getAdminGiftRequest(giftRequestId)
+      const mapped = orderDetailsFromApi(result)
+      if (!mapped) {
+        setOverlay('error')
+        return
+      }
+      setDetails(mapped)
+      setStatus(mapped.status)
+      setPickupAddress(mapped.pickupAddress)
+      setPickupNote(mapped.pickupNote)
+      setHasUnreadMessage(mapped.hasUnreadMessage)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      setOverlay('error')
+    }
+  }, [demo, fixturesOnly, giftRequestId, params, stateParam, timelineDemo])
+
+  useEffect(() => {
+    void load()
+  }, [load])
 
   if (overlay === 'loading' || overlay === 'error' || overlay === 'offline') {
     return (
@@ -130,27 +208,38 @@ export function OrderDetailsPage() {
     )
   }
 
+  if (!details) {
+    return (
+      <AdminShell title="Orders" currentNav="Orders">
+        <StandardContentState kind="error" />
+      </AdminShell>
+    )
+  }
+
+  const payment = paymentOverride ?? details.payment
+  const activeId = details.giftRequestId
+
   return (
     <AdminShell title="Orders" currentNav="Orders">
       <div className="flex flex-col gap-6 p-8">
         <OrderDetailsHeader
-          orderId={demo.orderId}
+          orderId={details.orderId}
           status={status}
-          customerName={demo.customerName}
-          createdAt={demo.createdAt}
+          customerName={details.customerName}
+          createdAt={details.createdAt}
         />
 
         <div className="flex flex-col items-start gap-6 lg:flex-row">
           <div className="flex min-w-0 flex-1 flex-col gap-6">
-            <RequestSection answers={demo.request} />
-            <GiftingTierSection tier={demo.tier} />
+            <RequestSection answers={details.request} />
+            <GiftingTierSection tier={details.tier} />
             <GiftOptionsSection
-              giftRequestId={demo.giftRequestId}
+              giftRequestId={activeId}
               status={status}
               commentsDemo={params.get('demo') === 'comments'}
             />
             <ReviewSection
-              giftRequestId={demo.giftRequestId}
+              giftRequestId={activeId}
               fixturesOnly={reviewFixturesOnly}
               fixtureReview={
                 reviewFixturesOnly ? (reviewFixture ?? null) : null
@@ -160,11 +249,11 @@ export function OrderDetailsPage() {
 
           <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
             <StatusSection
-              giftRequestId={demo.giftRequestId}
+              giftRequestId={activeId}
               status={status}
               pickupAddress={pickupAddress}
               pickupNote={pickupNote}
-              fixturesOnly={Boolean(timelineDemo)}
+              fixturesOnly={fixturesOnly}
               onChange={(next) => {
                 setStatus(next.status)
                 setPickupAddress(next.pickupAddress)
@@ -180,21 +269,23 @@ export function OrderDetailsPage() {
               }}
             />
             <ChatSection
-              unread={chatUnread}
+              unread={hasUnreadMessage}
               onOpenChat={() => {
                 setChatOpen(true)
-                setChatUnread(false)
+                setHasUnreadMessage(false)
               }}
             />
             <TimelineSection
-              giftRequestId={demo.giftRequestId}
+              giftRequestId={activeId}
               status={status}
               reachedAt={reachedAt}
-              fixturesOnly={Boolean(timelineDemo)}
+              fixturesOnly={fixturesOnly}
             />
             <PaymentSection payment={payment} />
             <InternalNotesSection
-              seedDemoNotes={params.get('demo') !== 'notes-empty'}
+              seedDemoNotes={
+                fixturesOnly && params.get('demo') !== 'notes-empty'
+              }
             />
           </div>
         </div>
@@ -202,8 +293,8 @@ export function OrderDetailsPage() {
 
       {chatOpen ? (
         <ChatPanel
-          orderId={demo.orderId}
-          customerName={demo.customerName}
+          orderId={details.orderId}
+          customerName={details.customerName}
           status={status}
           messages={chatMessages}
           giftOptions={DEMO_SHAREABLE_OPTIONS}

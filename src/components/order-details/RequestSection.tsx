@@ -1,3 +1,4 @@
+import { AuthenticatedImage } from '../gift-options/AuthenticatedImage'
 import type { OrderRequestAnswers } from './types'
 
 type RequestSectionProps = {
@@ -59,12 +60,21 @@ export function RequestSection({ answers }: RequestSectionProps) {
             ) : null}
             {answers.inspirationPhotos.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {answers.inspirationPhotos.slice(0, 3).map((_, index) => (
-                  <div
-                    key={index}
-                    className="size-20 rounded-lg bg-bg-muted"
-                  />
-                ))}
+                {answers.inspirationPhotos.slice(0, 3).map((photoUrl, index) =>
+                  photoUrl ? (
+                    <AuthenticatedImage
+                      key={`${photoUrl}-${index}`}
+                      imageUrl={photoUrl}
+                      alt=""
+                      className="size-20 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div
+                      key={`placeholder-${index}`}
+                      className="size-20 rounded-lg bg-bg-muted"
+                    />
+                  ),
+                )}
               </div>
             ) : null}
             {answers.inspirationLinks.length > 0 ? (
