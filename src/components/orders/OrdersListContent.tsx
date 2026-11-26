@@ -145,56 +145,84 @@ export function OrdersListContent({
       ) : (
         <>
           <div className="w-full overflow-x-auto rounded-lg border border-border-default">
-            <table className="w-full min-w-[720px] border-collapse text-left">
-              <thead>
-                <tr className="bg-bg-subtle">
-                  {['Order ID', 'Customer name', 'Status', 'Date'].map(
-                    (heading) => (
-                      <th
-                        key={heading}
-                        className="px-4 py-3 text-sm font-medium leading-5 text-text-secondary"
-                      >
-                        {heading}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((order) => (
-                  <tr
-                    key={order.id}
-                    onClick={() =>
+            <div role="table" className="flex w-full min-w-[760px] flex-col">
+              <div
+                role="row"
+                className="flex h-11 shrink-0 items-center gap-4 border-b border-border-default bg-bg-subtle px-4"
+              >
+                <div
+                  role="columnheader"
+                  className="w-[200px] shrink-0 pl-4 text-sm font-medium leading-5 text-text-secondary"
+                >
+                  Order ID
+                </div>
+                <div
+                  role="columnheader"
+                  className="min-w-0 flex-1 text-sm font-medium leading-5 text-text-secondary"
+                >
+                  Customer name
+                </div>
+                <div
+                  role="columnheader"
+                  className="w-[200px] shrink-0 text-sm font-medium leading-5 text-text-secondary"
+                >
+                  Status
+                </div>
+                <div
+                  role="columnheader"
+                  className="w-[160px] shrink-0 text-sm font-medium leading-5 text-text-secondary"
+                >
+                  Date
+                </div>
+              </div>
+              {pageRows.map((order) => (
+                <div
+                  key={order.id}
+                  role="row"
+                  tabIndex={0}
+                  onClick={() => navigate(`/orders/${order.giftRequestId}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
                       navigate(`/orders/${order.giftRequestId}`)
                     }
-                    className="h-[52px] cursor-pointer border-t border-border-default hover:bg-bg-muted"
+                  }}
+                  className="flex h-[52px] shrink-0 cursor-pointer items-center gap-4 border-b border-border-default bg-bg-default px-4 hover:bg-bg-subtle"
+                >
+                  <div
+                    role="cell"
+                    className="flex h-5 w-[200px] shrink-0 items-center gap-2"
                   >
-                    <td className="px-4 text-sm font-medium leading-5 text-text-primary">
-                      <span className="inline-flex items-center gap-2">
-                        {order.hasUnreadCustomerMessage ? (
-                          <span
-                            aria-label="Unread"
-                            className="size-2 shrink-0 rounded-full bg-accent-default"
-                          />
-                        ) : (
-                          <span className="size-2 shrink-0" aria-hidden />
-                        )}
-                        {order.orderId}
-                      </span>
-                    </td>
-                    <td className="px-4 text-sm leading-5 text-text-primary">
-                      {order.customerName}
-                    </td>
-                    <td className="px-4">
-                      <StatusLabel status={order.status} />
-                    </td>
-                    <td className="px-4 text-sm leading-5 whitespace-nowrap text-text-primary">
-                      {formatReviewSentDay(order.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    {order.hasUnreadCustomerMessage ? (
+                      <span
+                        aria-label="Unread"
+                        className="size-2 shrink-0 rounded-full bg-accent-default"
+                      />
+                    ) : (
+                      <span className="size-2 shrink-0" aria-hidden />
+                    )}
+                    <span className="text-sm font-medium leading-5 whitespace-nowrap text-text-primary">
+                      {order.orderId}
+                    </span>
+                  </div>
+                  <div
+                    role="cell"
+                    className="min-w-0 flex-1 truncate text-sm leading-5 text-text-primary"
+                  >
+                    {order.customerName}
+                  </div>
+                  <div role="cell" className="flex h-6 w-[200px] shrink-0 items-start">
+                    <StatusLabel status={order.status} />
+                  </div>
+                  <div
+                    role="cell"
+                    className="w-[160px] shrink-0 text-sm leading-5 whitespace-nowrap text-text-primary"
+                  >
+                    {formatReviewSentDay(order.createdAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3">
