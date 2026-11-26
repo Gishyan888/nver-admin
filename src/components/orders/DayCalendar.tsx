@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { formatReviewSentDay } from '../../lib/formatDateTime'
+import { IconChevronLeft, IconChevronRight } from '../icons/FigmaIcons'
 import { localDayKey } from './filterOrders'
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const
@@ -41,8 +42,8 @@ export function DayCalendar({
   }).format(viewMonth)
 
   return (
-    <div className="absolute top-full left-0 z-20 mt-1 w-[308px] rounded-lg border border-border-default bg-bg-default p-4 shadow-md">
-      <div className="mb-3 flex h-8 items-center justify-between">
+    <div className="absolute top-full left-0 z-20 mt-1 flex w-[308px] shrink-0 flex-col gap-3 overflow-hidden rounded-lg border border-border-default bg-bg-default p-4 shadow-md">
+      <div className="flex h-8 w-[276px] shrink-0 items-center justify-between overflow-hidden">
         <button
           type="button"
           aria-label="Previous month"
@@ -51,25 +52,13 @@ export function DayCalendar({
               new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1),
             )
           }
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-text-primary"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-0 bg-transparent text-text-primary"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M10 12L6 8L10 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <IconChevronLeft />
         </button>
-        <p className="text-sm font-medium leading-5 text-text-primary">{title}</p>
+        <p className="shrink-0 text-sm font-medium leading-5 whitespace-nowrap text-text-primary">
+          {title}
+        </p>
         <button
           type="button"
           aria-label="Next month"
@@ -78,38 +67,24 @@ export function DayCalendar({
               new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1),
             )
           }
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-text-primary"
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-0 bg-transparent text-text-primary"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M6 4L10 8L6 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <IconChevronRight />
         </button>
       </div>
-      <div className="mb-1 flex gap-1">
+      <div className="flex shrink-0 gap-1 overflow-hidden">
         {WEEKDAYS.map((label) => (
           <span
             key={label}
-            className="flex h-5 w-9 items-start justify-center text-xs font-medium leading-4 text-text-secondary"
+            className="flex h-5 w-9 shrink-0 items-start justify-center overflow-hidden text-xs font-medium leading-4 text-text-secondary"
           >
             {label}
           </span>
         ))}
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex shrink-0 flex-col gap-1 overflow-hidden">
         {Array.from({ length: 6 }, (_, week) => (
-          <div key={week} className="flex gap-1">
+          <div key={week} className="flex shrink-0 gap-1 overflow-hidden">
             {cells.slice(week * 7, week * 7 + 7).map((day) => {
               const key = localDayKey(day)
               const inMonth = day.getMonth() === viewMonth.getMonth()
@@ -118,7 +93,7 @@ export function DayCalendar({
                 return (
                   <div
                     key={key + String(day.getTime())}
-                    className="size-9 rounded-lg"
+                    className="size-9 shrink-0 rounded-lg"
                   />
                 )
               }
@@ -135,7 +110,7 @@ export function DayCalendar({
                     )
                     onSelectDay(key, formatReviewSentDay(noon.toISOString()))
                   }}
-                  className={`flex size-9 cursor-pointer items-center justify-center rounded-lg text-sm leading-5 ${
+                  className={`flex size-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg text-sm leading-5 ${
                     selected
                       ? 'bg-bg-inverse text-text-on-accent'
                       : 'text-text-primary hover:bg-bg-muted'

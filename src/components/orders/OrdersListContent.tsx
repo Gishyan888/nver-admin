@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatReviewSentDay } from '../../lib/formatDateTime'
+import { IconSearch } from '../icons/FigmaIcons'
 import { StatusLabel } from '../status/StatusLabel'
 import { StandardContentState } from '../standard/StandardContentState'
 import { DateField } from './DateField'
@@ -80,31 +81,9 @@ export function OrdersListContent({
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="relative w-[360px] shrink-0">
-          <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-text-secondary">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden
-            >
-              <circle
-                cx="7"
-                cy="7"
-                r="4.5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-              />
-              <path
-                d="M10.5 10.5L13.5 13.5"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
+      <div className="flex shrink-0 items-start gap-3">
+        <label className="flex h-12 w-[360px] shrink-0 cursor-text items-center gap-2 overflow-hidden rounded-lg border border-border-default bg-bg-default px-4">
+          <IconSearch className="shrink-0 text-text-secondary" />
           <input
             type="search"
             value={search}
@@ -113,7 +92,7 @@ export function OrdersListContent({
             onChange={(event) => {
               onSearchChange(event.target.value.slice(0, ORDERS_SEARCH_MAX))
             }}
-            className="h-12 w-full rounded-lg border border-border-default bg-bg-default py-3 pr-4 pl-10 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
+            className="min-w-0 flex-1 border-0 bg-transparent p-0 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
           />
         </label>
         <DateField

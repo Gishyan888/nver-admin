@@ -6,6 +6,7 @@ import {
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
 import { formatPriceUsd } from '../../lib/formatPrice'
 import { AuthenticatedImage } from '../gift-options/AuthenticatedImage'
+import { IconClose, IconPhoto } from '../icons/FigmaIcons'
 import { StandardContentState } from '../standard/StandardContentState'
 import { ChatMessageBubble } from './ChatMessageBubble'
 import type { ChatGiftOptionRef, ChatMessage } from './types'
@@ -107,7 +108,7 @@ export function ChatPanel({
           <div className="min-w-0">
             <h2
               id="chat-panel-title"
-              className="text-base font-semibold leading-6 text-text-primary"
+              className="text-xl font-semibold leading-7 text-text-primary"
             >
               Chat
             </h2>
@@ -119,22 +120,9 @@ export function ChatPanel({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-xl leading-none text-text-secondary"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-0 bg-transparent text-text-primary"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M4 4L12 12M12 4L4 12"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <IconClose />
           </button>
         </header>
 
@@ -238,75 +226,54 @@ export function ChatPanel({
             {writable ? (
               <form
                 onSubmit={handleSend}
-                className="flex shrink-0 flex-col gap-3 border-t border-border-default p-4"
+                className="flex shrink-0 flex-col gap-3 border-t border-border-default px-6 py-4"
               >
-                <textarea
+                <input
+                  type="text"
                   value={draft}
                   maxLength={CHAT_TEXT_MAX}
-                  rows={3}
                   placeholder="Write a message"
                   onChange={(event) =>
                     setDraft(event.target.value.slice(0, CHAT_TEXT_MAX))
                   }
-                  className="w-full resize-none rounded-lg border border-border-default bg-bg-default px-4 py-3 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
+                  className="h-12 w-full shrink-0 rounded-lg border border-border-default bg-bg-default px-4 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      if (file) {
-                        onSendPhoto(file)
-                      }
-                      event.target.value = ''
-                    }}
-                  />
-                  <button
-                    type="button"
-                    aria-label="Add photo"
-                    onClick={() => fileRef.current?.click()}
-                    className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default text-text-secondary"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      aria-hidden
+                <div className="flex h-10 shrink-0 items-center justify-between">
+                  <div className="flex shrink-0 items-center gap-2">
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        if (file) {
+                          onSendPhoto(file)
+                        }
+                        event.target.value = ''
+                      }}
+                    />
+                    <button
+                      type="button"
+                      aria-label="Add photo"
+                      onClick={() => fileRef.current?.click()}
+                      className="flex size-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-0 bg-transparent text-text-primary"
                     >
-                      <rect
-                        x="2"
-                        y="3.5"
-                        width="12"
-                        height="9"
-                        rx="1.5"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="2"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={shareDisabled}
-                    onClick={() => setSharing(true)}
-                    className="flex h-10 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
-                  >
-                    Share gift option
-                  </button>
+                      <IconPhoto />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={shareDisabled}
+                      onClick={() => setSharing(true)}
+                      className="flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 whitespace-nowrap text-text-primary disabled:cursor-default disabled:text-text-tertiary"
+                    >
+                      Share gift option
+                    </button>
+                  </div>
                   <button
                     type="submit"
                     disabled={!draft.trim()}
-                    className="flex h-10 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium leading-5 text-text-on-accent disabled:opacity-40"
+                    className="flex h-10 shrink-0 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium leading-5 text-text-on-accent disabled:opacity-40"
                   >
                     Send
                   </button>
