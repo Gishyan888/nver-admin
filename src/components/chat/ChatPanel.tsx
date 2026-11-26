@@ -103,7 +103,7 @@ export function ChatPanel({
         aria-labelledby="chat-panel-title"
         className="flex h-full w-full max-w-[480px] flex-col bg-bg-default shadow-lg"
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border-default px-6 py-5">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border-default py-4 pr-4 pl-6">
           <div className="min-w-0">
             <h2
               id="chat-panel-title"
@@ -119,9 +119,22 @@ export function ChatPanel({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-xl leading-none text-text-secondary"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-xl leading-none text-text-secondary"
           >
-            ×
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 4L12 12M12 4L4 12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </header>
 
@@ -255,30 +268,30 @@ export function ChatPanel({
                     type="button"
                     aria-label="Add photo"
                     onClick={() => fileRef.current?.click()}
-                    className="flex size-12 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default text-text-secondary"
+                    className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default text-text-secondary"
                   >
                     <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
                       fill="none"
                       aria-hidden
                     >
                       <rect
-                        x="2.5"
-                        y="4.5"
-                        width="15"
-                        height="11"
-                        rx="2"
+                        x="2"
+                        y="3.5"
+                        width="12"
+                        height="9"
+                        rx="1.5"
                         stroke="currentColor"
-                        strokeWidth="1.5"
+                        strokeWidth="1.4"
                       />
                       <circle
-                        cx="10"
-                        cy="10"
-                        r="2.5"
+                        cx="8"
+                        cy="8"
+                        r="2"
                         stroke="currentColor"
-                        strokeWidth="1.5"
+                        strokeWidth="1.4"
                       />
                     </svg>
                   </button>
@@ -286,14 +299,14 @@ export function ChatPanel({
                     type="button"
                     disabled={shareDisabled}
                     onClick={() => setSharing(true)}
-                    className="flex h-12 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default px-3 text-sm font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+                    className="flex h-10 flex-1 cursor-pointer items-center justify-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
                   >
                     Share gift option
                   </button>
                   <button
                     type="submit"
                     disabled={!draft.trim()}
-                    className="flex h-12 cursor-pointer items-center rounded-lg bg-bg-inverse px-5 text-base font-medium text-text-on-accent disabled:opacity-40"
+                    className="flex h-10 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium leading-5 text-text-on-accent disabled:opacity-40"
                   >
                     Send
                   </button>

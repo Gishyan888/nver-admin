@@ -61,44 +61,77 @@ export function UsersListContent({
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
       <div className="w-full overflow-x-auto rounded-lg border border-border-default">
-        <table className="w-full min-w-[720px] border-collapse text-left">
-          <thead>
-            <tr className="bg-bg-subtle">
-              {['Name', 'E-mail', 'Registered', 'Gift requests'].map(
-                (heading) => (
-                  <th
-                    key={heading}
-                    className="px-4 py-3 text-sm font-medium leading-5 text-text-secondary"
-                  >
-                    {heading}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.map((user) => (
-              <tr
-                key={user.id}
-                onClick={() => navigate(`/users/${user.id}`)}
-                className="h-[52px] cursor-pointer border-t border-border-default hover:bg-bg-muted"
+        <div role="table" className="flex w-full min-w-[760px] flex-col">
+          <div
+            role="row"
+            className="flex h-11 shrink-0 items-center gap-4 border-b border-border-default bg-bg-subtle px-4"
+          >
+            <div
+              role="columnheader"
+              className="w-[280px] shrink-0 text-sm font-medium leading-5 text-text-secondary"
+            >
+              Name
+            </div>
+            <div
+              role="columnheader"
+              className="min-w-0 flex-1 text-sm font-medium leading-5 text-text-secondary"
+            >
+              E-mail
+            </div>
+            <div
+              role="columnheader"
+              className="w-[200px] shrink-0 text-sm font-medium leading-5 text-text-secondary"
+            >
+              Registered
+            </div>
+            <div
+              role="columnheader"
+              className="w-[160px] shrink-0 text-sm font-medium leading-5 text-text-secondary"
+            >
+              Gift requests
+            </div>
+          </div>
+          {pageRows.map((user) => (
+            <div
+              key={user.id}
+              role="row"
+              tabIndex={0}
+              onClick={() => navigate(`/users/${user.id}`)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate(`/users/${user.id}`)
+                }
+              }}
+              className="flex h-[52px] shrink-0 cursor-pointer items-center gap-4 border-b border-border-default bg-bg-default px-4 hover:bg-bg-subtle"
+            >
+              <div
+                role="cell"
+                className="w-[280px] shrink-0 truncate text-sm font-medium leading-5 text-text-primary"
               >
-                <td className="px-4 text-sm font-medium leading-5 text-text-primary">
-                  {user.name}
-                </td>
-                <td className="px-4 text-sm leading-5 text-text-primary">
-                  {user.email}
-                </td>
-                <td className="px-4 text-sm leading-5 whitespace-nowrap text-text-primary">
-                  {formatReviewSentDay(user.registeredAt)}
-                </td>
-                <td className="px-4 text-sm leading-5 text-text-primary">
-                  {user.giftRequestCount}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                {user.name}
+              </div>
+              <div
+                role="cell"
+                className="min-w-0 flex-1 truncate text-sm leading-5 text-text-primary"
+              >
+                {user.email}
+              </div>
+              <div
+                role="cell"
+                className="w-[200px] shrink-0 text-sm leading-5 whitespace-nowrap text-text-primary"
+              >
+                {formatReviewSentDay(user.registeredAt)}
+              </div>
+              <div
+                role="cell"
+                className="w-[160px] shrink-0 text-sm leading-5 text-text-primary"
+              >
+                {user.giftRequestCount}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-3">
@@ -106,7 +139,7 @@ export function UsersListContent({
           type="button"
           disabled={isFirst}
           onClick={() => onPageChange(Math.max(1, safePage - 1))}
-          className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+          className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
         >
           Previous
         </button>
@@ -114,7 +147,7 @@ export function UsersListContent({
           type="button"
           disabled={isLast}
           onClick={() => onPageChange(safePage + 1)}
-          className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+          className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
         >
           Next
         </button>

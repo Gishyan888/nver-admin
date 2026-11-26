@@ -24,7 +24,7 @@ export function OrderDetailsHeader({
       >
         ← Orders
       </Link>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-xl font-semibold leading-7 text-text-primary">
           {orderId}
         </h2>

@@ -84,7 +84,7 @@ export function ReviewsPageContent({
         <div className="w-full overflow-x-auto rounded-lg border border-border-default">
           <table className="w-full min-w-[960px] border-collapse text-left">
             <thead>
-              <tr className="bg-bg-subtle">
+              <tr className="h-11 border-b border-border-default bg-bg-subtle">
                 {[
                   'Customer name',
                   'Order ID',
@@ -96,7 +96,7 @@ export function ReviewsPageContent({
                 ].map((label) => (
                   <th
                     key={label || 'actions'}
-                    className="px-4 py-3 text-sm font-medium leading-5 text-text-secondary"
+                    className="px-4 text-sm font-medium leading-5 text-text-secondary"
                   >
                     {label}
                   </th>
@@ -107,7 +107,7 @@ export function ReviewsPageContent({
               {pageRows.map((review) => (
                 <tr
                   key={review.id}
-                  className="border-t border-border-default align-top"
+                  className="min-h-[72px] border-b border-border-default align-top"
                 >
                   <td className="px-4 py-4 text-sm font-medium leading-5 text-text-primary">
                     {review.customerName}
@@ -173,7 +173,7 @@ export function ReviewsPageContent({
             type="button"
             disabled={isFirst}
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
-            className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+            className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
           >
             Previous
           </button>
@@ -181,7 +181,7 @@ export function ReviewsPageContent({
             type="button"
             disabled={isLast}
             onClick={() => onPageChange(safePage + 1)}
-            className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+            className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
           >
             Next
           </button>

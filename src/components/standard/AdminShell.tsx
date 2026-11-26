@@ -149,7 +149,7 @@ export function AdminShell({
           className={`flex shrink-0 border-b border-border-default px-8 ${
             header
               ? 'flex-col items-start py-6'
-              : 'h-[68px] items-center py-0'
+              : 'items-center py-5'
           }`}
         >
           {header ??

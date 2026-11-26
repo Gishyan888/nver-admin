@@ -230,7 +230,7 @@ export function OrdersListContent({
               type="button"
               disabled={isFirst}
               onClick={() => onPageChange(Math.max(1, safePage - 1))}
-              className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+              className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
             >
               Previous
             </button>
@@ -238,7 +238,7 @@ export function OrdersListContent({
               type="button"
               disabled={isLast}
               onClick={() => onPageChange(safePage + 1)}
-              className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
+              className="flex h-10 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium leading-5 text-text-primary disabled:cursor-default disabled:text-text-tertiary"
             >
               Next
             </button>

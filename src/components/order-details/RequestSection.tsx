@@ -73,7 +73,7 @@ export function RequestSection({ answers }: RequestSectionProps) {
                   ) : (
                     <div
                       key={`placeholder-${index}`}
-                      className="size-24 rounded-lg bg-bg-subtle"
+                      className="size-24 rounded-lg bg-bg-muted"
                     />
                   ),
                 )}

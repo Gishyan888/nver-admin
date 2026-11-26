@@ -57,7 +57,7 @@ export function CustomerPageContent({
               <tr
                 key={order.id}
                 onClick={() => navigate(`/orders/${order.giftRequestId}`)}
-                className="h-[52px] cursor-pointer border-t border-border-default hover:bg-bg-muted"
+                className="h-[52px] cursor-pointer border-b border-border-default hover:bg-bg-subtle"
               >
                 <td className="px-4 text-sm font-medium leading-5 text-text-primary">
                   <span className="inline-flex items-center gap-2">

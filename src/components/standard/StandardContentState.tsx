@@ -41,14 +41,17 @@ function PanelContentSkeleton() {
 
   return (
     <div className="flex w-full flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
+      <div className="flex w-full items-center justify-between overflow-hidden">
         <div className="h-10 w-80 shrink-0 rounded-lg bg-bg-muted" />
         <div className="h-10 w-[120px] shrink-0 rounded-lg bg-bg-muted" />
       </div>
-      <div className="flex w-full flex-col">
+      <div className="flex w-full flex-col overflow-hidden">
         <div className="flex gap-8 border-b border-border-default py-5">
           {Array.from({ length: columns }).map((_, index) => (
-            <div key={`head-${index}`} className="min-w-0 flex-1">
+            <div
+              key={`head-${index}`}
+              className="min-w-0 flex-1 overflow-hidden"
+            >
               <div className="h-3 w-20 rounded bg-bg-muted" />
             </div>
           ))}
@@ -59,7 +62,10 @@ function PanelContentSkeleton() {
             className="flex gap-8 border-b border-border-default py-5"
           >
             {Array.from({ length: columns }).map((_, col) => (
-              <div key={`cell-${row}-${col}`} className="min-w-0 flex-1">
+              <div
+                key={`cell-${row}-${col}`}
+                className="min-w-0 flex-1 overflow-hidden"
+              >
                 <div
                   className={`h-4 rounded bg-bg-muted ${
                     col === 0 ? 'w-40' : 'w-[120px]'
@@ -75,7 +81,7 @@ function PanelContentSkeleton() {
 }
 
 /**
- * The three standard content-area states (T-01-09).
+ * The three standard content-area states (T-01-09 / Figma 5:45).
  * Used inside AdminShell on panel pages, and alone on auth pages.
  */
 export function StandardContentState({
