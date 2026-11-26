@@ -28,7 +28,10 @@ import { StatusSection } from '../components/status/StatusSection'
 import { AdminShell } from '../components/standard/AdminShell'
 import { StandardContentState } from '../components/standard/StandardContentState'
 import { TimelineSection } from '../components/timeline/TimelineSection'
-import { demoTimelineForQuery } from '../components/timeline/timelineDemo'
+import {
+  DEMO_TIMELINE_PREPARING,
+  demoTimelineForQuery,
+} from '../components/timeline/timelineDemo'
 import type { TimelineReachedAt } from '../components/timeline/types'
 import type { GiftRequestStatus } from '../lib/giftRequestStatus'
 
@@ -80,21 +83,33 @@ export function OrderDetailsPage() {
   const { giftRequestId = '' } = useParams()
   const [params] = useSearchParams()
   const stateParam = params.get('state')
-  const timelineDemo = demoTimelineForQuery(params.get('demo'))
+  const demoParam = params.get('demo')
+  const timelineDemo = demoTimelineForQuery(demoParam)
   const fixturesOnly =
-    params.get('demo') === '1' ||
+    demoParam === '1' ||
+    demoParam === 'comments' ||
     params.has('variant') ||
     params.has('payment') ||
     Boolean(timelineDemo) ||
     stateParam === 'loading' ||
     stateParam === 'error' ||
     stateParam === 'offline'
+  /** Gift-option / comments fixtures (API skipped). */
+  const giftOptionsFixtures =
+    fixturesOnly || demoParam === 'comments'
 
   const demo = useMemo(
     () => resolveDemo(giftRequestId, params.get('variant')),
     [giftRequestId, params],
   )
   const paymentOverride = parsePayment(params.get('payment'))
+
+  /** Seed Preparing timeline for paid demo frame (98:1064) unless overridden. */
+  const defaultDemoTimeline =
+    fixturesOnly && !timelineDemo && params.get('variant') !== 'new'
+      ? DEMO_TIMELINE_PREPARING
+      : null
+  const initialTimeline = timelineDemo ?? defaultDemoTimeline
 
   const [overlay, setOverlay] = useState<PageOverlay>(() => {
     if (stateParam === 'loading' || stateParam === 'error' || stateParam === 'offline') {
@@ -106,15 +121,19 @@ export function OrderDetailsPage() {
     fixturesOnly ? demo : null,
   )
   const [status, setStatus] = useState<GiftRequestStatus>(
-    () => timelineDemo?.status ?? demo.status,
+    () => initialTimeline?.status ?? demo.status,
   )
   const [pickupAddress, setPickupAddress] = useState<string | null>(null)
   const [pickupNote, setPickupNote] = useState<string | null>(null)
   const [reachedAt, setReachedAt] = useState<TimelineReachedAt>(
-    () => timelineDemo?.reachedAt ?? {},
+    () => initialTimeline?.reachedAt ?? {},
   )
   const [hasUnreadMessage, setHasUnreadMessage] = useState(
-    params.get('unread') === '1',
+    // Figma order-details frame shows unread chat by default for paid demo.
+    params.get('unread') === '1' ||
+      (fixturesOnly &&
+        params.get('unread') !== '0' &&
+        params.get('variant') !== 'new'),
   )
 
   const reviewParam = params.get('review')
@@ -140,9 +159,16 @@ export function OrderDetailsPage() {
       return
     }
     if (fixturesOnly) {
+      const timeline = timelineDemo ?? defaultDemoTimeline
       setDetails(demo)
-      setStatus(timelineDemo?.status ?? demo.status)
-      setHasUnreadMessage(params.get('unread') === '1')
+      setStatus(timeline?.status ?? demo.status)
+      if (timeline?.reachedAt) {
+        setReachedAt(timeline.reachedAt)
+      }
+      setHasUnreadMessage(
+        params.get('unread') === '1' ||
+          (params.get('unread') !== '0' && params.get('variant') !== 'new'),
+      )
       setOverlay('none')
       return
     }
@@ -175,7 +201,15 @@ export function OrderDetailsPage() {
       }
       setOverlay('error')
     }
-  }, [demo, fixturesOnly, giftRequestId, params, stateParam, timelineDemo])
+  }, [
+    defaultDemoTimeline,
+    demo,
+    fixturesOnly,
+    giftRequestId,
+    params,
+    stateParam,
+    timelineDemo,
+  ])
 
   useEffect(() => {
     void load()
@@ -227,7 +261,7 @@ export function OrderDetailsPage() {
           <GiftOptionsSection
             giftRequestId={activeId}
             status={status}
-            commentsDemo={params.get('demo') === 'comments'}
+            commentsDemo={giftOptionsFixtures}
           />
           <ReviewSection
             giftRequestId={activeId}

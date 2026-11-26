@@ -81,7 +81,7 @@ export function OrdersListContent({
   return (
     <div className="flex flex-1 flex-col gap-6 p-8">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="relative min-w-[280px] flex-1">
+        <label className="relative w-[360px] shrink-0">
           <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-text-secondary">
             <svg
               width="16"
@@ -169,7 +169,7 @@ export function OrdersListContent({
                     }
                     className="h-[52px] cursor-pointer border-t border-border-default hover:bg-bg-muted"
                   >
-                    <td className="px-4 text-sm leading-5 text-text-primary">
+                    <td className="px-4 text-sm font-medium leading-5 text-text-primary">
                       <span className="inline-flex items-center gap-2">
                         {order.hasUnreadCustomerMessage ? (
                           <span

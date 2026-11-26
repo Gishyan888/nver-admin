@@ -83,7 +83,7 @@ export function UsersListContent({
                 onClick={() => navigate(`/users/${user.id}`)}
                 className="h-[52px] cursor-pointer border-t border-border-default hover:bg-bg-muted"
               >
-                <td className="px-4 text-sm leading-5 text-text-primary">
+                <td className="px-4 text-sm font-medium leading-5 text-text-primary">
                   {user.name}
                 </td>
                 <td className="px-4 text-sm leading-5 text-text-primary">

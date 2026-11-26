@@ -152,11 +152,12 @@ export function AdminShell({
               : 'h-[68px] items-center py-0'
           }`}
         >
-          {header ?? (
-            <h1 className="text-xl font-semibold leading-7 text-text-primary">
-              {title}
-            </h1>
-          )}
+          {header ??
+            (title ? (
+              <h1 className="text-xl font-semibold leading-7 text-text-primary">
+                {title}
+              </h1>
+            ) : null)}
         </header>
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
           {overlay === 'none' ? (

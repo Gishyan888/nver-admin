@@ -49,12 +49,12 @@ export function RequestSection({ answers }: RequestSectionProps) {
       <Field label="What they like" value={answers.whatTheyLike} />
       <Field label="Hobbies" value={answers.hobbies} />
       <Field label="What to avoid" value={answers.whatToAvoid} />
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
         <p className="text-sm leading-5 text-text-secondary">Inspiration</p>
         {answers.inspirationText ||
         answers.inspirationPhotos.length > 0 ||
         answers.inspirationLinks.length > 0 ? (
-          <>
+          <div className="flex flex-col gap-3">
             {answers.inspirationText ? (
               <p className="text-base leading-6 text-text-primary">
                 {answers.inspirationText}
@@ -73,7 +73,7 @@ export function RequestSection({ answers }: RequestSectionProps) {
                   ) : (
                     <div
                       key={`placeholder-${index}`}
-                      className="size-24 rounded-lg bg-bg-muted"
+                      className="size-24 rounded-lg bg-bg-subtle"
                     />
                   ),
                 )}
@@ -92,7 +92,7 @@ export function RequestSection({ answers }: RequestSectionProps) {
                 ))}
               </div>
             ) : null}
-          </>
+          </div>
         ) : (
           <p className="text-base leading-6 text-text-secondary">Not given</p>
         )}

@@ -204,7 +204,7 @@ export function GiftOptionsSection({
 
   if (overlay === 'loading') {
     return (
-      <div className="w-full max-w-[752px] rounded-lg border border-border-default bg-bg-default p-6">
+      <div className="w-full rounded-lg border border-border-default bg-bg-default p-6">
         <StandardContentState kind="loading" />
       </div>
     )
@@ -212,7 +212,7 @@ export function GiftOptionsSection({
 
   if (overlay === 'error' || overlay === 'offline') {
     return (
-      <div className="flex min-h-48 w-full max-w-[752px] flex-col rounded-lg border border-border-default bg-bg-default">
+      <div className="flex min-h-48 w-full flex-col rounded-lg border border-border-default bg-bg-default">
         <StandardContentState kind={overlay === 'offline' ? 'offline' : 'error'} />
       </div>
     )
@@ -222,7 +222,7 @@ export function GiftOptionsSection({
 
   return (
     <>
-      <section className="flex w-full max-w-[752px] flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+      <section className="flex w-full flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-semibold leading-6 text-text-primary">
             Gift options

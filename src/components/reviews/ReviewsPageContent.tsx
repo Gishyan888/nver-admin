@@ -109,7 +109,7 @@ export function ReviewsPageContent({
                   key={review.id}
                   className="border-t border-border-default align-top"
                 >
-                  <td className="px-4 py-4 text-sm leading-5 text-text-primary">
+                  <td className="px-4 py-4 text-sm font-medium leading-5 text-text-primary">
                     {review.customerName}
                   </td>
                   <td className="px-4 py-4">
@@ -145,7 +145,7 @@ export function ReviewsPageContent({
                           onClick={() =>
                             setPending({ reviewId: review.id, kind: 'approve' })
                           }
-                          className="flex h-9 cursor-pointer items-center rounded-lg bg-bg-inverse px-4 text-sm font-medium text-text-on-accent disabled:opacity-60"
+                          className="flex h-9 cursor-pointer items-center rounded-lg bg-bg-inverse px-3 text-sm font-medium text-text-on-accent disabled:opacity-60"
                         >
                           Approve
                         </button>
@@ -155,7 +155,7 @@ export function ReviewsPageContent({
                           onClick={() =>
                             setPending({ reviewId: review.id, kind: 'reject' })
                           }
-                          className="flex h-9 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-4 text-sm font-medium text-text-primary disabled:opacity-60"
+                          className="flex h-9 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-3 text-sm font-medium text-text-primary disabled:opacity-60"
                         >
                           Reject
                         </button>

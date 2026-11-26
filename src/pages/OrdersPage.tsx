@@ -29,8 +29,13 @@ export function OrdersPage() {
   const [toDay, setToDay] = useState<string | null>(null)
   const [toLabel, setToLabel] = useState<string | null>(null)
   const [page, setPage] = useState(1)
-  const [orders, setOrders] = useState<OrderListItem[]>([])
-  const [total, setTotal] = useState(0)
+  const [orders, setOrders] = useState<OrderListItem[]>(() => {
+    if (!demo) {
+      return []
+    }
+    return buildDemoOrders()
+  })
+  const [total, setTotal] = useState(() => (demo ? 45 : 0))
   const [overlay, setOverlay] = useState<PageOverlay>(
     fixturesOnly ? 'none' : 'loading',
   )

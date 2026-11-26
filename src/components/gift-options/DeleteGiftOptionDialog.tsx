@@ -15,7 +15,7 @@ export function DeleteGiftOptionDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-gift-option-title"
-        className="w-full max-w-[480px] rounded-lg border border-border-default bg-bg-default p-6"
+        className="w-full max-w-[480px] rounded-xl bg-bg-default p-6"
       >
         <p
           id="delete-gift-option-title"

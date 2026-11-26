@@ -9,7 +9,7 @@ export function RequireAuth() {
 
   if (status === 'booting') {
     return (
-      <AdminShell>
+      <AdminShell title="">
         <StandardContentState kind="loading" />
       </AdminShell>
     )

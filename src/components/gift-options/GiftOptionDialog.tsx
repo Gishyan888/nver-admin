@@ -130,7 +130,7 @@ export function GiftOptionDialog({
         onSubmit={(event) => {
           void onSubmit(event)
         }}
-        className="flex max-h-[min(900px,calc(100vh-4rem))] w-full max-w-[560px] flex-col overflow-auto rounded-lg border border-border-default bg-bg-default p-6"
+        className="flex max-h-[min(900px,calc(100vh-4rem))] w-full max-w-[560px] flex-col overflow-auto rounded-xl bg-bg-default p-6"
       >
         <h2 className="text-xl font-semibold leading-7 text-text-primary">
           {heading}
