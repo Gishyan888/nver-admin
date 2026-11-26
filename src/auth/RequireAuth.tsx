@@ -1,6 +1,5 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { AdminShell } from '../components/standard/AdminShell'
-import { StandardContentState } from '../components/standard/StandardContentState'
+import { Navigate, useLocation } from 'react-router-dom'
+import { AdminLayout } from '../components/standard/AdminLayout'
 import { useAuth } from './useAuth'
 
 export function RequireAuth() {
@@ -8,16 +7,12 @@ export function RequireAuth() {
   const location = useLocation()
 
   if (status === 'booting') {
-    return (
-      <AdminShell title="">
-        <StandardContentState kind="loading" />
-      </AdminShell>
-    )
+    return <AdminLayout boot />
   }
 
   if (status !== 'authenticated') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  return <Outlet />
+  return <AdminLayout />
 }

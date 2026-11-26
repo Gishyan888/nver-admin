@@ -8,10 +8,12 @@ export type StandardContentKind = 'loading' | 'error' | 'offline'
 type StandardContentStateProps = {
   kind: StandardContentKind
   /**
-   * Loading skeleton shaped like the auth card (login / forgot password).
-   * Panel pages use the toolbar + table skeleton from the frames.
+   * Loading skeleton shape:
+   * - panel: toolbar + table (list pages / Figma 5:45)
+   * - auth: login card
+   * - detail: order/customer two-column cards (not the Orders table)
    */
-  contentShape?: 'panel' | 'auth'
+  contentShape?: 'panel' | 'auth' | 'detail'
 }
 
 function AuthFormSkeleton() {
@@ -80,6 +82,78 @@ function PanelContentSkeleton() {
   )
 }
 
+/** Two-column card skeleton for order / customer detail pages. */
+function DetailContentSkeleton() {
+  return (
+    <div className="flex flex-col items-start gap-6 p-8 lg:flex-row">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-24 rounded bg-bg-muted" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <div className="h-4 w-20 rounded bg-bg-muted" />
+              <div className="h-5 w-40 rounded bg-bg-muted" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="h-4 w-28 rounded bg-bg-muted" />
+              <div className="h-5 w-36 rounded bg-bg-muted" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="h-4 w-24 rounded bg-bg-muted" />
+            <div className="h-5 w-full rounded bg-bg-muted" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="h-4 w-16 rounded bg-bg-muted" />
+            <div className="h-5 w-3/4 rounded bg-bg-muted" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-28 rounded bg-bg-muted" />
+          <div className="h-5 w-56 rounded bg-bg-muted" />
+        </div>
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-32 rounded bg-bg-muted" />
+          <div className="h-28 w-full rounded-lg bg-bg-muted" />
+        </div>
+      </div>
+      <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-16 rounded bg-bg-muted" />
+          <div className="h-8 w-28 rounded-full bg-bg-muted" />
+          <div className="h-4 w-full rounded bg-bg-muted" />
+          <div className="h-4 w-2/3 rounded bg-bg-muted" />
+        </div>
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-14 rounded bg-bg-muted" />
+          <div className="h-10 w-full rounded-lg bg-bg-muted" />
+        </div>
+        <div className="flex flex-col gap-4 rounded-lg border border-border-default bg-bg-default p-6">
+          <div className="h-6 w-24 rounded bg-bg-muted" />
+          <div className="flex flex-col gap-3">
+            <div className="h-4 w-full rounded bg-bg-muted" />
+            <div className="h-4 w-5/6 rounded bg-bg-muted" />
+            <div className="h-4 w-4/6 rounded bg-bg-muted" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function DetailHeaderSkeleton() {
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <div className="h-5 w-20 rounded bg-bg-muted" />
+      <div className="flex items-center gap-3">
+        <div className="h-7 w-28 rounded bg-bg-muted" />
+        <div className="h-6 w-20 rounded-full bg-bg-muted" />
+      </div>
+      <div className="h-5 w-72 rounded bg-bg-muted" />
+    </div>
+  )
+}
+
 /**
  * The three standard content-area states (T-01-09 / Figma 5:45).
  * Used inside AdminShell on panel pages, and alone on auth pages.
@@ -89,11 +163,13 @@ export function StandardContentState({
   contentShape = 'panel',
 }: StandardContentStateProps) {
   if (kind === 'loading') {
-    return contentShape === 'auth' ? (
-      <AuthFormSkeleton />
-    ) : (
-      <PanelContentSkeleton />
-    )
+    if (contentShape === 'auth') {
+      return <AuthFormSkeleton />
+    }
+    if (contentShape === 'detail') {
+      return <DetailContentSkeleton />
+    }
+    return <PanelContentSkeleton />
   }
 
   const text = kind === 'offline' ? STANDARD_OFFLINE_TEXT : STANDARD_ERROR_TEXT

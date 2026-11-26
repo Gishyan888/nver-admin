@@ -10,7 +10,7 @@ import { adminReviewFromApi } from '../components/reviews/mapAdminReview'
 import { ReviewsPageContent } from '../components/reviews/ReviewsPageContent'
 import { buildDemoReviews } from '../components/reviews/reviewsDemo'
 import type { AdminReview, ReviewState } from '../components/reviews/types'
-import { AdminShell } from '../components/standard/AdminShell'
+import { useAdminShell } from '../components/standard/AdminLayout'
 
 type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
@@ -117,18 +117,18 @@ export function ReviewsPage() {
     }
   }
 
+  useAdminShell({ title: 'Reviews', currentNav: 'Reviews' })
+
   return (
-    <AdminShell title="Reviews" currentNav="Reviews">
-      <ReviewsPageContent
-        reviews={reviews}
-        total={total}
-        page={page}
-        onPageChange={setPage}
-        onDecide={handleDecide}
-        busy={busy}
-        overlay={overlay}
-        serverPaged={!fixturesOnly}
-      />
-    </AdminShell>
+    <ReviewsPageContent
+      reviews={reviews}
+      total={total}
+      page={page}
+      onPageChange={setPage}
+      onDecide={handleDecide}
+      busy={busy}
+      overlay={overlay}
+      serverPaged={!fixturesOnly}
+    />
   )
 }

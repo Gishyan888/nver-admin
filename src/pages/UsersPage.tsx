@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listAdminCustomers } from '../api/customers'
 import { NetworkError } from '../api/types'
-import { AdminShell } from '../components/standard/AdminShell'
+import { useAdminShell } from '../components/standard/AdminLayout'
 import { userListItemFromApi } from '../components/users/mapCustomer'
 import type { UserListItem } from '../components/users/types'
 import { UsersListContent } from '../components/users/UsersListContent'
@@ -64,16 +64,16 @@ export function UsersPage() {
     void load()
   }, [load])
 
+  useAdminShell({ title: 'Users', currentNav: 'Users' })
+
   return (
-    <AdminShell title="Users" currentNav="Users">
-      <UsersListContent
-        users={users}
-        total={total}
-        page={page}
-        onPageChange={setPage}
-        overlay={overlay}
-        serverPaged={!fixturesOnly}
-      />
-    </AdminShell>
+    <UsersListContent
+      users={users}
+      total={total}
+      page={page}
+      onPageChange={setPage}
+      overlay={overlay}
+      serverPaged={!fixturesOnly}
+    />
   )
 }

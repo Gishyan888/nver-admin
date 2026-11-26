@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { getAdminGiftRequest } from '../api/giftRequests'
 import { NetworkError } from '../api/types'
@@ -25,8 +31,11 @@ import {
   DEMO_ORDER_REVIEW_WAITING,
 } from '../components/reviews/reviewsDemo'
 import { StatusSection } from '../components/status/StatusSection'
-import { AdminShell } from '../components/standard/AdminShell'
-import { StandardContentState } from '../components/standard/StandardContentState'
+import { useAdminShell } from '../components/standard/AdminLayout'
+import {
+  DetailHeaderSkeleton,
+  StandardContentState,
+} from '../components/standard/StandardContentState'
 import { TimelineSection } from '../components/timeline/TimelineSection'
 import {
   DEMO_TIMELINE_PREPARING,
@@ -215,27 +224,34 @@ export function OrderDetailsPage() {
     void load()
   }, [load])
 
-  if (overlay === 'loading' || overlay === 'error' || overlay === 'offline') {
+  const header = useMemo((): ReactNode => {
+    if (!details) {
+      return <DetailHeaderSkeleton />
+    }
     return (
-      <AdminShell title="Orders" currentNav="Orders">
-        <StandardContentState
-          kind={
-            overlay === 'loading'
-              ? 'loading'
-              : overlay === 'offline'
-                ? 'offline'
-                : 'error'
-          }
-        />
-      </AdminShell>
+      <OrderDetailsHeader
+        orderId={details.orderId}
+        status={status}
+        customerName={details.customerName}
+        createdAt={details.createdAt}
+      />
     )
+  }, [details, status])
+
+  useAdminShell({
+    currentNav: 'Orders',
+    header,
+  })
+
+  if (overlay === 'loading') {
+    return <StandardContentState kind="loading" contentShape="detail" />
   }
 
-  if (!details) {
+  if (overlay === 'error' || overlay === 'offline' || !details) {
     return (
-      <AdminShell title="Orders" currentNav="Orders">
-        <StandardContentState kind="error" />
-      </AdminShell>
+      <StandardContentState
+        kind={overlay === 'offline' ? 'offline' : 'error'}
+      />
     )
   }
 
@@ -243,79 +259,65 @@ export function OrderDetailsPage() {
   const activeId = details.giftRequestId
 
   return (
-    <AdminShell
-      currentNav="Orders"
-      header={
-        <OrderDetailsHeader
-          orderId={details.orderId}
+    <div className="flex flex-col items-start gap-6 p-8 lg:flex-row">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <RequestSection answers={details.request} />
+        <GiftingTierSection tier={details.tier} />
+        <GiftOptionsSection
+          giftRequestId={activeId}
           status={status}
-          customerName={details.customerName}
-          createdAt={details.createdAt}
+          commentsDemo={giftOptionsFixtures}
         />
-      }
-    >
-      <div className="flex flex-col items-start gap-6 p-8 lg:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
-          <RequestSection answers={details.request} />
-          <GiftingTierSection tier={details.tier} />
-          <GiftOptionsSection
-            giftRequestId={activeId}
-            status={status}
-            commentsDemo={giftOptionsFixtures}
-          />
-          <ReviewSection
-            giftRequestId={activeId}
-            fixturesOnly={reviewFixturesOnly}
-            fixtureReview={
-              reviewFixturesOnly ? (reviewFixture ?? null) : null
-            }
-          />
-        </div>
-
-        <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
-          <StatusSection
-            giftRequestId={activeId}
-            status={status}
-            pickupAddress={pickupAddress}
-            pickupNote={pickupNote}
-            fixturesOnly={fixturesOnly}
-            onChange={(next) => {
-              setStatus(next.status)
-              setPickupAddress(next.pickupAddress)
-              setPickupNote(next.pickupNote)
-              if (next.reachedAt) {
-                setReachedAt((prev) => ({ ...prev, ...next.reachedAt }))
-              } else {
-                setReachedAt((prev) => ({
-                  ...prev,
-                  [next.status]: new Date().toISOString(),
-                }))
-              }
-            }}
-          />
-          <OrderChat
-            giftRequestId={activeId}
-            orderId={details.orderId}
-            customerName={details.customerName}
-            status={status}
-            unread={hasUnreadMessage}
-            onUnreadChange={setHasUnreadMessage}
-            fixturesOnly={fixturesOnly}
-          />
-          <TimelineSection
-            giftRequestId={activeId}
-            status={status}
-            reachedAt={reachedAt}
-            fixturesOnly={fixturesOnly}
-          />
-          <PaymentSection payment={payment} />
-          <InternalNotesSection
-            giftRequestId={activeId}
-            fixturesOnly={fixturesOnly}
-            seedDemoNotes={params.get('demo') !== 'notes-empty'}
-          />
-        </div>
+        <ReviewSection
+          giftRequestId={activeId}
+          fixturesOnly={reviewFixturesOnly}
+          fixtureReview={reviewFixturesOnly ? (reviewFixture ?? null) : null}
+        />
       </div>
-    </AdminShell>
+
+      <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
+        <StatusSection
+          giftRequestId={activeId}
+          status={status}
+          pickupAddress={pickupAddress}
+          pickupNote={pickupNote}
+          fixturesOnly={fixturesOnly}
+          onChange={(next) => {
+            setStatus(next.status)
+            setPickupAddress(next.pickupAddress)
+            setPickupNote(next.pickupNote)
+            if (next.reachedAt) {
+              setReachedAt((prev) => ({ ...prev, ...next.reachedAt }))
+            } else {
+              setReachedAt((prev) => ({
+                ...prev,
+                [next.status]: new Date().toISOString(),
+              }))
+            }
+          }}
+        />
+        <OrderChat
+          giftRequestId={activeId}
+          orderId={details.orderId}
+          customerName={details.customerName}
+          status={status}
+          unread={hasUnreadMessage}
+          onUnreadChange={setHasUnreadMessage}
+          fixturesOnly={fixturesOnly}
+        />
+        <TimelineSection
+          giftRequestId={activeId}
+          status={status}
+          reachedAt={reachedAt}
+          fixturesOnly={fixturesOnly}
+        />
+        <PaymentSection payment={payment} />
+        <InternalNotesSection
+          giftRequestId={activeId}
+          fixturesOnly={fixturesOnly}
+          seedDemoNotes={params.get('demo') !== 'notes-empty'}
+        />
+      </div>
+    </div>
   )
 }

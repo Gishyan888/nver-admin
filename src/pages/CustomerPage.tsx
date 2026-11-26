@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getAdminCustomer } from '../api/customers'
 import { NetworkError } from '../api/types'
 import { IconBackArrow } from '../components/icons/FigmaIcons'
-import { AdminShell } from '../components/standard/AdminShell'
-import { StandardContentState } from '../components/standard/StandardContentState'
+import { useAdminShell } from '../components/standard/AdminLayout'
+import {
+  DetailHeaderSkeleton,
+  StandardContentState,
+} from '../components/standard/StandardContentState'
 import { CustomerPageContent } from '../components/users/CustomerPageContent'
 import { customerFromApi } from '../components/users/mapCustomer'
 import type { CustomerDemo } from '../components/users/types'
@@ -92,52 +95,40 @@ export function CustomerPage() {
     void load()
   }, [load])
 
-  if (overlay === 'loading' || overlay === 'error' || overlay === 'offline') {
+  const header = useMemo(() => {
+    if (!customer) {
+      return <DetailHeaderSkeleton />
+    }
     return (
-      <AdminShell title="Users" currentNav="Users">
-        <StandardContentState
-          kind={
-            overlay === 'loading'
-              ? 'loading'
-              : overlay === 'offline'
-                ? 'offline'
-                : 'error'
-          }
-        />
-      </AdminShell>
+      <div className="flex flex-col gap-2">
+        <Link
+          to="/users"
+          className="inline-flex w-fit shrink-0 items-center gap-1.5 text-sm font-medium leading-5 whitespace-nowrap text-text-secondary"
+        >
+          <IconBackArrow />
+          Users
+        </Link>
+        <h1 className="text-xl font-semibold leading-7 text-text-primary">
+          {customer.name}
+        </h1>
+        <p className="text-sm leading-5 text-text-secondary">{customer.email}</p>
+      </div>
+    )
+  }, [customer])
+
+  useAdminShell({ currentNav: 'Users', header })
+
+  if (overlay === 'loading') {
+    return <StandardContentState kind="loading" contentShape="detail" />
+  }
+
+  if (overlay === 'error' || overlay === 'offline' || !customer) {
+    return (
+      <StandardContentState
+        kind={overlay === 'offline' ? 'offline' : 'error'}
+      />
     )
   }
 
-  if (!customer) {
-    return (
-      <AdminShell title="Users" currentNav="Users">
-        <StandardContentState kind="error" />
-      </AdminShell>
-    )
-  }
-
-  return (
-    <AdminShell
-      currentNav="Users"
-      header={
-        <div className="flex flex-col gap-2">
-          <Link
-            to="/users"
-            className="inline-flex w-fit shrink-0 items-center gap-1.5 text-sm font-medium leading-5 whitespace-nowrap text-text-secondary"
-          >
-            <IconBackArrow />
-            Users
-          </Link>
-          <h1 className="text-xl font-semibold leading-7 text-text-primary">
-            {customer.name}
-          </h1>
-          <p className="text-sm leading-5 text-text-secondary">
-            {customer.email}
-          </p>
-        </div>
-      }
-    >
-      <CustomerPageContent orders={customer.orders} overlay="none" />
-    </AdminShell>
-  )
+  return <CustomerPageContent orders={customer.orders} overlay="none" />
 }

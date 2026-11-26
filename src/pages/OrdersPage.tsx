@@ -6,7 +6,7 @@ import { orderListItemFromApi } from '../components/orders/mapOrderListItem'
 import { OrdersListContent } from '../components/orders/OrdersListContent'
 import { buildDemoOrders } from '../components/orders/ordersDemo'
 import type { OrderListItem } from '../components/orders/types'
-import { AdminShell } from '../components/standard/AdminShell'
+import { useAdminShell } from '../components/standard/AdminLayout'
 
 type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
@@ -97,32 +97,32 @@ export function OrdersPage() {
     void load()
   }, [load])
 
+  useAdminShell({ title: 'Orders', currentNav: 'Orders' })
+
   return (
-    <AdminShell title="Orders" currentNav="Orders">
-      <OrdersListContent
-        orders={orders}
-        total={total}
-        page={page}
-        onPageChange={setPage}
-        search={search}
-        onSearchChange={setSearch}
-        fromDay={fromDay}
-        fromLabel={fromLabel}
-        onFromChange={(key, label) => {
-          setFromDay(key)
-          setFromLabel(label)
-          setPage(1)
-        }}
-        toDay={toDay}
-        toLabel={toLabel}
-        onToChange={(key, label) => {
-          setToDay(key)
-          setToLabel(label)
-          setPage(1)
-        }}
-        overlay={overlay}
-        serverPaged={!fixturesOnly}
-      />
-    </AdminShell>
+    <OrdersListContent
+      orders={orders}
+      total={total}
+      page={page}
+      onPageChange={setPage}
+      search={search}
+      onSearchChange={setSearch}
+      fromDay={fromDay}
+      fromLabel={fromLabel}
+      onFromChange={(key, label) => {
+        setFromDay(key)
+        setFromLabel(label)
+        setPage(1)
+      }}
+      toDay={toDay}
+      toLabel={toLabel}
+      onToChange={(key, label) => {
+        setToDay(key)
+        setToLabel(label)
+        setPage(1)
+      }}
+      overlay={overlay}
+      serverPaged={!fixturesOnly}
+    />
   )
 }
