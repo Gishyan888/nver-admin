@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatReviewSentDay } from '../../lib/formatDateTime'
 import { StatusLabel } from '../status/StatusLabel'
@@ -6,40 +6,68 @@ import { StandardContentState } from '../standard/StandardContentState'
 import { DateField } from './DateField'
 import { filterOrders } from './filterOrders'
 import type { OrderListItem } from './types'
-import { ORDERS_PAGE_SIZE } from './types'
+import { ORDERS_PAGE_SIZE, ORDERS_SEARCH_MAX } from './types'
 
 type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type OrdersListContentProps = {
   orders: OrderListItem[]
+  /** Total matching rows (server) or unfiltered count (demo). */
+  total: number
+  /** 1-based page index. */
+  page: number
+  onPageChange: (page: number) => void
+  search: string
+  onSearchChange: (value: string) => void
+  fromDay: string | null
+  fromLabel: string | null
+  onFromChange: (dayKey: string | null, label: string | null) => void
+  toDay: string | null
+  toLabel: string | null
+  onToChange: (dayKey: string | null, label: string | null) => void
   overlay?: PageOverlay
+  /** When true, `orders` is already one server page. */
+  serverPaged?: boolean
 }
 
 export function OrdersListContent({
   orders,
+  total,
+  page,
+  onPageChange,
+  search,
+  onSearchChange,
+  fromDay,
+  fromLabel,
+  onFromChange,
+  toDay,
+  toLabel,
+  onToChange,
   overlay = 'none',
+  serverPaged = false,
 }: OrdersListContentProps) {
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
-  const [fromDay, setFromDay] = useState<string | null>(null)
-  const [fromLabel, setFromLabel] = useState<string | null>(null)
-  const [toDay, setToDay] = useState<string | null>(null)
-  const [toLabel, setToLabel] = useState<string | null>(null)
-  const [page, setPage] = useState(0)
 
   const filtered = useMemo(
-    () => filterOrders(orders, search, fromDay, toDay),
-    [orders, search, fromDay, toDay],
+    () =>
+      serverPaged ? orders : filterOrders(orders, search, fromDay, toDay),
+    [orders, search, fromDay, toDay, serverPaged],
   )
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / ORDERS_PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const pageRows = filtered.slice(
-    safePage * ORDERS_PAGE_SIZE,
-    safePage * ORDERS_PAGE_SIZE + ORDERS_PAGE_SIZE,
-  )
-  const isFirst = safePage === 0
-  const isLast = safePage >= pageCount - 1 || filtered.length === 0
+  const listTotal = serverPaged ? total : filtered.length
+  const sourceTotal = serverPaged ? total : orders.length
+  const filtersActive = Boolean(search.trim() || fromDay || toDay)
+
+  const pageCount = Math.max(1, Math.ceil(listTotal / ORDERS_PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), pageCount)
+  const pageRows = serverPaged
+    ? filtered
+    : filtered.slice(
+        (safePage - 1) * ORDERS_PAGE_SIZE,
+        (safePage - 1) * ORDERS_PAGE_SIZE + ORDERS_PAGE_SIZE,
+      )
+  const isFirst = safePage <= 1
+  const isLast = safePage >= pageCount || listTotal === 0
 
   if (overlay === 'loading') {
     return <StandardContentState kind="loading" />
@@ -80,10 +108,10 @@ export function OrdersListContent({
           <input
             type="search"
             value={search}
+            maxLength={ORDERS_SEARCH_MAX}
             placeholder="Search by customer name or order ID"
             onChange={(event) => {
-              setSearch(event.target.value)
-              setPage(0)
+              onSearchChange(event.target.value.slice(0, ORDERS_SEARCH_MAX))
             }}
             className="h-12 w-full rounded-lg border border-border-default bg-bg-default py-3 pr-4 pl-10 text-base leading-6 text-text-primary outline-none placeholder:text-text-secondary"
           />
@@ -92,31 +120,23 @@ export function OrdersListContent({
           label="From"
           valueLabel={fromLabel}
           dayKey={fromDay}
-          onChange={(key, label) => {
-            setFromDay(key)
-            setFromLabel(label)
-            setPage(0)
-          }}
+          onChange={onFromChange}
         />
         <DateField
           label="To"
           valueLabel={toLabel}
           dayKey={toDay}
-          onChange={(key, label) => {
-            setToDay(key)
-            setToLabel(label)
-            setPage(0)
-          }}
+          onChange={onToChange}
         />
       </div>
 
-      {orders.length === 0 ? (
+      {sourceTotal === 0 && !filtersActive ? (
         <div className="flex flex-1 items-center justify-center py-24">
           <p className="text-base leading-6 text-text-secondary">
             No gift requests yet.
           </p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : listTotal === 0 ? (
         <div className="flex flex-1 items-center justify-center py-24">
           <p className="text-base leading-6 text-text-secondary">
             No gift requests match your search.
@@ -181,7 +201,7 @@ export function OrdersListContent({
             <button
               type="button"
               disabled={isFirst}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={() => onPageChange(Math.max(1, safePage - 1))}
               className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
             >
               Previous
@@ -189,7 +209,7 @@ export function OrdersListContent({
             <button
               type="button"
               disabled={isLast}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => onPageChange(safePage + 1)}
               className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
             >
               Next
