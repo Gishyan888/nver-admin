@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getAdminCustomer } from '../api/customers'
 import { NetworkError } from '../api/types'
+import { IconBackArrow } from '../components/icons/FigmaIcons'
 import { AdminShell } from '../components/standard/AdminShell'
 import { StandardContentState } from '../components/standard/StandardContentState'
 import { CustomerPageContent } from '../components/users/CustomerPageContent'
@@ -122,9 +123,10 @@ export function CustomerPage() {
         <div className="flex flex-col gap-2">
           <Link
             to="/users"
-            className="w-fit text-sm font-medium leading-5 text-text-secondary"
+            className="inline-flex w-fit shrink-0 items-center gap-1.5 text-sm font-medium leading-5 whitespace-nowrap text-text-secondary"
           >
-            ← Users
+            <IconBackArrow />
+            Users
           </Link>
           <h1 className="text-xl font-semibold leading-7 text-text-primary">
             {customer.name}

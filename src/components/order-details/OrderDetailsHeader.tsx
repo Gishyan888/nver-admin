@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatReviewSentDay } from '../../lib/formatDateTime'
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
+import { IconBackArrow } from '../icons/FigmaIcons'
 import { StatusLabel } from '../status/StatusLabel'
 
 type OrderDetailsHeaderProps = {
@@ -20,9 +21,10 @@ export function OrderDetailsHeader({
     <header className="flex flex-col gap-2">
       <Link
         to="/"
-        className="w-fit shrink-0 text-sm font-medium leading-5 whitespace-nowrap text-text-secondary"
+        className="inline-flex w-fit shrink-0 items-center gap-1.5 text-sm font-medium leading-5 whitespace-nowrap text-text-secondary"
       >
-        ← Orders
+        <IconBackArrow />
+        Orders
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-xl font-semibold leading-7 text-text-primary">

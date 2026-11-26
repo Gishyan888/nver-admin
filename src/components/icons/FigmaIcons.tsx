@@ -7,6 +7,31 @@ type IconProps = {
   className?: string
 }
 
+/**
+ * Leftwards arrow from outlined Inter Medium glyph in node 100:1121
+ * ("Back to orders"). Used instead of U+2190 so the mark cannot drop
+ * when the webfont subset omits the arrow.
+ */
+export function IconBackArrow({ className }: IconProps) {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10.2316 10.46"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+      className={className}
+      style={{ display: 'block', flexShrink: 0 }}
+    >
+      <path
+        d="M4.63852 9.86839L2.21729e-05 5.22989L4.63852 0.591397L5.5334 1.47634L2.42616 4.58358H10.2316V5.8762H2.42616L5.5334 8.97847L4.63852 9.86839Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
 export function IconSearch({ className }: IconProps) {
   return (
     <svg
