@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import type { GiftOption } from '../../api/giftOptions'
+import { dismissOnBackdrop } from '../../lib/dismissOnBackdrop'
 import { formatCounter } from '../../lib/formatPrice'
 import { AuthenticatedImage } from './AuthenticatedImage'
 
@@ -124,12 +125,16 @@ export function GiftOptionDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6 py-10">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6 py-10"
+      onClick={(event) => dismissOnBackdrop(event, onGoBack, busy)}
+    >
       <form
         noValidate
         onSubmit={(event) => {
           void onSubmit(event)
         }}
+        onClick={(event) => event.stopPropagation()}
         className="flex max-h-[min(900px,calc(100vh-4rem))] w-full max-w-[560px] flex-col overflow-auto rounded-xl bg-bg-default p-6"
       >
         <h2 className="text-xl font-semibold leading-7 text-text-primary">

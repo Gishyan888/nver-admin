@@ -1,3 +1,5 @@
+import { dismissOnBackdrop } from '../../lib/dismissOnBackdrop'
+
 type ReviewDecisionDialogProps = {
   kind: 'approve' | 'reject'
   busy?: boolean
@@ -16,12 +18,16 @@ export function ReviewDecisionDialog({
   const confirmLabel = kind === 'approve' ? 'Approve' : 'Reject'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+      onClick={(event) => dismissOnBackdrop(event, onGoBack, busy)}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-decision-title"
         className="flex w-full max-w-[480px] flex-col gap-6 rounded-xl bg-bg-default p-6"
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex w-full flex-col gap-2">
           <p

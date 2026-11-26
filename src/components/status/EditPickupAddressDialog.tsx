@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { dismissOnBackdrop } from '../../lib/dismissOnBackdrop'
 import { PICKUP_FIELD_MAX } from '../../lib/statusControl'
 
 type EditPickupAddressDialogProps = {
@@ -32,12 +33,16 @@ export function EditPickupAddressDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+      onClick={(event) => dismissOnBackdrop(event, onGoBack, busy)}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-pickup-title"
         className="flex w-full max-w-[480px] flex-col gap-6 rounded-xl bg-bg-default p-6"
+        onClick={(event) => event.stopPropagation()}
       >
         <p
           id="edit-pickup-title"

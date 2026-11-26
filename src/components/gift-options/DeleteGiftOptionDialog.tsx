@@ -1,3 +1,5 @@
+import { dismissOnBackdrop } from '../../lib/dismissOnBackdrop'
+
 type DeleteGiftOptionDialogProps = {
   onGoBack: () => void
   onDelete: () => void
@@ -10,12 +12,16 @@ export function DeleteGiftOptionDialog({
   busy = false,
 }: DeleteGiftOptionDialogProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+      onClick={(event) => dismissOnBackdrop(event, onGoBack, busy)}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-gift-option-title"
         className="w-full max-w-[480px] rounded-xl bg-bg-default p-6"
+        onClick={(event) => event.stopPropagation()}
       >
         <p
           id="delete-gift-option-title"

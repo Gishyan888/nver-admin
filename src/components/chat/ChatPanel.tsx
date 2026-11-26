@@ -6,6 +6,7 @@ import {
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
 import { formatPriceUsd } from '../../lib/formatPrice'
 import { AuthenticatedImage } from '../gift-options/AuthenticatedImage'
+import { dismissOnBackdrop } from '../../lib/dismissOnBackdrop'
 import { IconClose, IconPhoto } from '../icons/FigmaIcons'
 import { StandardContentState } from '../standard/StandardContentState'
 import { ChatMessageBubble } from './ChatMessageBubble'
@@ -97,12 +98,16 @@ export function ChatPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black/40"
+      onClick={(event) => dismissOnBackdrop(event, onClose)}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="chat-panel-title"
         className="flex h-full w-full max-w-[480px] flex-col bg-bg-default shadow-lg"
+        onClick={(event) => event.stopPropagation()}
       >
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border-default py-4 pr-4 pl-6">
           <div className="min-w-0">
