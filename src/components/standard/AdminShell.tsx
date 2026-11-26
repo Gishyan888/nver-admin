@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, NetworkError } from '../../api/types'
 import { useAuth } from '../../auth/useAuth'
+import { NverLogo } from '../brand/NverLogo'
 import { StandardContentState } from './StandardContentState'
 
 export type AdminNavItem = 'Orders' | 'Users' | 'Reviews'
@@ -119,9 +120,7 @@ export function AdminShell({
       <aside className="flex h-full w-60 shrink-0 flex-col justify-between bg-bg-inverse p-4">
         <div className="flex w-full flex-col gap-6">
           <div className="flex w-full items-start px-3 py-1">
-            <p className="text-xl font-semibold leading-7 text-text-on-accent">
-              Nvér
-            </p>
+            <NverLogo variant="white" className="h-7 w-[23.333px]" />
           </div>
           <nav className="flex w-full flex-col gap-1">
             {(Object.keys(NAV_PATH) as AdminNavItem[]).map((item) => (

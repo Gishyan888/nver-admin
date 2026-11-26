@@ -209,79 +209,79 @@ export function OrderDetailsPage() {
   const activeId = details.giftRequestId
 
   return (
-    <AdminShell title="Orders" currentNav="Orders">
-      <div className="flex flex-col gap-6 p-8">
+    <AdminShell
+      currentNav="Orders"
+      header={
         <OrderDetailsHeader
           orderId={details.orderId}
           status={status}
           customerName={details.customerName}
           createdAt={details.createdAt}
         />
+      }
+    >
+      <div className="flex flex-col items-start gap-6 p-8 lg:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
+          <RequestSection answers={details.request} />
+          <GiftingTierSection tier={details.tier} />
+          <GiftOptionsSection
+            giftRequestId={activeId}
+            status={status}
+            commentsDemo={params.get('demo') === 'comments'}
+          />
+          <ReviewSection
+            giftRequestId={activeId}
+            fixturesOnly={reviewFixturesOnly}
+            fixtureReview={
+              reviewFixturesOnly ? (reviewFixture ?? null) : null
+            }
+          />
+        </div>
 
-        <div className="flex flex-col items-start gap-6 lg:flex-row">
-          <div className="flex min-w-0 flex-1 flex-col gap-6">
-            <RequestSection answers={details.request} />
-            <GiftingTierSection tier={details.tier} />
-            <GiftOptionsSection
-              giftRequestId={activeId}
-              status={status}
-              commentsDemo={params.get('demo') === 'comments'}
-            />
-            <ReviewSection
-              giftRequestId={activeId}
-              fixturesOnly={reviewFixturesOnly}
-              fixtureReview={
-                reviewFixturesOnly ? (reviewFixture ?? null) : null
+        <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
+          <StatusSection
+            giftRequestId={activeId}
+            status={status}
+            pickupAddress={pickupAddress}
+            pickupNote={pickupNote}
+            fixturesOnly={fixturesOnly}
+            onChange={(next) => {
+              setStatus(next.status)
+              setPickupAddress(next.pickupAddress)
+              setPickupNote(next.pickupNote)
+              if (next.reachedAt) {
+                setReachedAt((prev) => ({ ...prev, ...next.reachedAt }))
+              } else {
+                setReachedAt((prev) => ({
+                  ...prev,
+                  [next.status]: new Date().toISOString(),
+                }))
               }
-            />
-          </div>
-
-          <div className="flex w-full max-w-[360px] shrink-0 flex-col gap-6">
-            <StatusSection
-              giftRequestId={activeId}
-              status={status}
-              pickupAddress={pickupAddress}
-              pickupNote={pickupNote}
-              fixturesOnly={fixturesOnly}
-              onChange={(next) => {
-                setStatus(next.status)
-                setPickupAddress(next.pickupAddress)
-                setPickupNote(next.pickupNote)
-                if (next.reachedAt) {
-                  setReachedAt((prev) => ({ ...prev, ...next.reachedAt }))
-                } else {
-                  setReachedAt((prev) => ({
-                    ...prev,
-                    [next.status]: new Date().toISOString(),
-                  }))
-                }
-              }}
-            />
-            <OrderChat
-              giftRequestId={activeId}
-              orderId={details.orderId}
-              customerName={details.customerName}
-              status={status}
-              unread={hasUnreadMessage}
-              onUnreadChange={setHasUnreadMessage}
-              fixturesOnly={fixturesOnly}
-            />
-            <TimelineSection
-              giftRequestId={activeId}
-              status={status}
-              reachedAt={reachedAt}
-              fixturesOnly={fixturesOnly}
-            />
-            <PaymentSection payment={payment} />
-            <InternalNotesSection
-              giftRequestId={activeId}
-              fixturesOnly={fixturesOnly}
-              seedDemoNotes={params.get('demo') !== 'notes-empty'}
-            />
-          </div>
+            }}
+          />
+          <OrderChat
+            giftRequestId={activeId}
+            orderId={details.orderId}
+            customerName={details.customerName}
+            status={status}
+            unread={hasUnreadMessage}
+            onUnreadChange={setHasUnreadMessage}
+            fixturesOnly={fixturesOnly}
+          />
+          <TimelineSection
+            giftRequestId={activeId}
+            status={status}
+            reachedAt={reachedAt}
+            fixturesOnly={fixturesOnly}
+          />
+          <PaymentSection payment={payment} />
+          <InternalNotesSection
+            giftRequestId={activeId}
+            fixturesOnly={fixturesOnly}
+            seedDemoNotes={params.get('demo') !== 'notes-empty'}
+          />
         </div>
       </div>
-
     </AdminShell>
   )
 }

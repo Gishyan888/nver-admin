@@ -20,7 +20,7 @@ export function OrderDetailsHeader({
     <header className="flex flex-col gap-2">
       <Link
         to="/"
-        className="w-fit text-sm font-medium leading-5 text-accent-default"
+        className="w-fit text-sm font-medium leading-5 text-text-secondary"
       >
         ← Orders
       </Link>

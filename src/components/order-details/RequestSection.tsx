@@ -40,6 +40,8 @@ export function RequestSection({ answers }: RequestSectionProps) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Occasion" value={answers.occasion} />
         <Field label="Date of the occasion" value={answers.dateOfOccasion} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Field label="Recipient" value={answers.recipient} />
         <Field label="Age" value={answers.age} />
         <Field label="Gender" value={answers.gender} />
@@ -59,19 +61,19 @@ export function RequestSection({ answers }: RequestSectionProps) {
               </p>
             ) : null}
             {answers.inspirationPhotos.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {answers.inspirationPhotos.slice(0, 3).map((photoUrl, index) =>
                   photoUrl ? (
                     <AuthenticatedImage
                       key={`${photoUrl}-${index}`}
                       imageUrl={photoUrl}
                       alt=""
-                      className="size-20 rounded-lg object-cover"
+                      className="size-24 rounded-lg object-cover"
                     />
                   ) : (
                     <div
                       key={`placeholder-${index}`}
-                      className="size-20 rounded-lg bg-bg-muted"
+                      className="size-24 rounded-lg bg-bg-muted"
                     />
                   ),
                 )}
