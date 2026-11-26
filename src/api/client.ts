@@ -195,4 +195,12 @@ export function apiUrl(path: string): string {
   return `${API_BASE_URL}${path}`
 }
 
+export function getAccessToken(): string | null {
+  return tokenStore.getAccessToken()
+}
+
+export function apiBaseUrl(): string {
+  return API_BASE_URL
+}
+
 export { refreshOnce }

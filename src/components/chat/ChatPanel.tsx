@@ -5,6 +5,7 @@ import {
 } from '../../lib/formatDateTime'
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
 import { formatPriceUsd } from '../../lib/formatPrice'
+import { AuthenticatedImage } from '../gift-options/AuthenticatedImage'
 import { StandardContentState } from '../standard/StandardContentState'
 import { ChatMessageBubble } from './ChatMessageBubble'
 import type { ChatGiftOptionRef, ChatMessage } from './types'
@@ -16,6 +17,8 @@ type ChatPanelProps = {
   orderId: string
   customerName: string
   status: GiftRequestStatus
+  /** When set, overrides status-based sendability (from GET canSend). */
+  canSendOverride?: boolean
   messages: ChatMessage[]
   giftOptions: ChatGiftOptionRef[]
   overlay?: PanelOverlay
@@ -26,7 +29,7 @@ type ChatPanelProps = {
   onTryAgain: (messageId: string) => void
 }
 
-function canSend(status: GiftRequestStatus): boolean {
+function canSendFromStatus(status: GiftRequestStatus): boolean {
   return status !== 'Completed' && status !== 'Canceled'
 }
 
@@ -34,6 +37,7 @@ export function ChatPanel({
   orderId,
   customerName,
   status,
+  canSendOverride,
   messages,
   giftOptions,
   overlay = 'none',
@@ -47,7 +51,7 @@ export function ChatPanel({
   const [sharing, setSharing] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  const writable = canSend(status)
+  const writable = canSendOverride ?? canSendFromStatus(status)
   const shareDisabled = !writable || giftOptions.length === 0
 
   const rows = useMemo(() => {
@@ -149,8 +153,8 @@ export function ChatPanel({
                   className="flex items-center gap-3 rounded-lg border border-border-default p-3"
                 >
                   {option.imageUrl ? (
-                    <img
-                      src={option.imageUrl}
+                    <AuthenticatedImage
+                      imageUrl={option.imageUrl}
                       alt=""
                       className="size-14 shrink-0 rounded-lg object-cover"
                     />

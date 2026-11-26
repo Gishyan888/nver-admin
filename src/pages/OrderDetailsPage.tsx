@@ -2,14 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { getAdminGiftRequest } from '../api/giftRequests'
 import { NetworkError } from '../api/types'
-import {
-  buildDemoChatMessages,
-  DEMO_ADMIN_EMAIL,
-  DEMO_SHAREABLE_OPTIONS,
-} from '../components/chat/chatDemo'
-import { ChatPanel } from '../components/chat/ChatPanel'
-import { ChatSection } from '../components/chat/ChatSection'
-import type { ChatMessage } from '../components/chat/types'
+import { OrderChat } from '../components/chat/OrderChat'
 import { GiftOptionsSection } from '../components/gift-options/GiftOptionsSection'
 import { GiftingTierSection } from '../components/order-details/GiftingTierSection'
 import { InternalNotesSection } from '../components/order-details/InternalNotesSection'
@@ -122,10 +115,6 @@ export function OrderDetailsPage() {
   )
   const [hasUnreadMessage, setHasUnreadMessage] = useState(
     params.get('unread') === '1',
-  )
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
-    buildDemoChatMessages(),
   )
 
   const reviewParam = params.get('review')
@@ -268,12 +257,14 @@ export function OrderDetailsPage() {
                 }
               }}
             />
-            <ChatSection
+            <OrderChat
+              giftRequestId={activeId}
+              orderId={details.orderId}
+              customerName={details.customerName}
+              status={status}
               unread={hasUnreadMessage}
-              onOpenChat={() => {
-                setChatOpen(true)
-                setHasUnreadMessage(false)
-              }}
+              onUnreadChange={setHasUnreadMessage}
+              fixturesOnly={fixturesOnly}
             />
             <TimelineSection
               giftRequestId={activeId}
@@ -291,65 +282,6 @@ export function OrderDetailsPage() {
         </div>
       </div>
 
-      {chatOpen ? (
-        <ChatPanel
-          orderId={details.orderId}
-          customerName={details.customerName}
-          status={status}
-          messages={chatMessages}
-          giftOptions={DEMO_SHAREABLE_OPTIONS}
-          onClose={() => setChatOpen(false)}
-          onSendText={(text) => {
-            setChatMessages((prev) => [
-              ...prev,
-              {
-                id: `local-${Date.now()}`,
-                kind: 'text',
-                sender: 'admin',
-                adminEmail: DEMO_ADMIN_EMAIL,
-                text,
-                sentAt: new Date().toISOString(),
-              },
-            ])
-          }}
-          onSendPhoto={(file) => {
-            const url = URL.createObjectURL(file)
-            setChatMessages((prev) => [
-              ...prev,
-              {
-                id: `local-photo-${Date.now()}`,
-                kind: 'photo',
-                sender: 'admin',
-                adminEmail: DEMO_ADMIN_EMAIL,
-                photoUrl: url,
-                sentAt: new Date().toISOString(),
-              },
-            ])
-          }}
-          onShareGiftOption={(option) => {
-            setChatMessages((prev) => [
-              ...prev,
-              {
-                id: `local-share-${Date.now()}`,
-                kind: 'gift-option',
-                sender: 'admin',
-                adminEmail: DEMO_ADMIN_EMAIL,
-                giftOption: { ...option },
-                sentAt: new Date().toISOString(),
-              },
-            ])
-          }}
-          onTryAgain={(messageId) => {
-            setChatMessages((prev) =>
-              prev.map((message) =>
-                message.id === messageId && 'failed' in message
-                  ? { ...message, failed: false }
-                  : message,
-              ),
-            )
-          }}
-        />
-      ) : null}
     </AdminShell>
   )
 }

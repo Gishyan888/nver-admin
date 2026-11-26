@@ -1,10 +1,29 @@
 import { formatChatTime } from '../../lib/formatDateTime'
 import { formatPriceUsd } from '../../lib/formatPrice'
+import { AuthenticatedImage } from '../gift-options/AuthenticatedImage'
 import type { ChatMessage } from './types'
 
 type ChatMessageBubbleProps = {
   message: ChatMessage
   onTryAgain?: (messageId: string) => void
+}
+
+function MessageImage({
+  url,
+  className,
+  placeholderClassName,
+}: {
+  url: string
+  className: string
+  placeholderClassName: string
+}) {
+  if (!url) {
+    return <div className={placeholderClassName} />
+  }
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return <img src={url} alt="" className={className} />
+  }
+  return <AuthenticatedImage imageUrl={url} alt="" className={className} />
 }
 
 export function ChatMessageBubble({
@@ -59,15 +78,11 @@ export function ChatMessageBubble({
             failed ? 'border border-danger-default' : ''
           }`}
         >
-          {message.photoUrl ? (
-            <img
-              src={message.photoUrl}
-              alt=""
-              className="max-h-48 w-full object-cover"
-            />
-          ) : (
-            <div className="h-36 w-48 bg-bg-muted" />
-          )}
+          <MessageImage
+            url={message.photoUrl}
+            className="max-h-48 w-full object-cover"
+            placeholderClassName="h-36 w-48 bg-bg-muted"
+          />
         </div>
       ) : null}
 
@@ -81,15 +96,11 @@ export function ChatMessageBubble({
                 : 'border-border-default bg-bg-default'
           }`}
         >
-          {message.giftOption.imageUrl ? (
-            <img
-              src={message.giftOption.imageUrl}
-              alt=""
-              className="size-16 shrink-0 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="size-16 shrink-0 rounded-lg bg-bg-muted" />
-          )}
+          <MessageImage
+            url={message.giftOption.imageUrl}
+            className="size-16 shrink-0 rounded-lg object-cover"
+            placeholderClassName="size-16 shrink-0 rounded-lg bg-bg-muted"
+          />
           <div className="flex min-w-0 flex-col gap-1">
             {message.giftOption.deleted ? (
               <p className="text-sm leading-5 text-text-secondary">
