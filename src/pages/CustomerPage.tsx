@@ -1,30 +1,119 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { getAdminCustomer } from '../api/customers'
+import { NetworkError } from '../api/types'
 import { AdminShell } from '../components/standard/AdminShell'
-import type { StandardContentKind } from '../components/standard/StandardContentState'
+import { StandardContentState } from '../components/standard/StandardContentState'
 import { CustomerPageContent } from '../components/users/CustomerPageContent'
+import { customerFromApi } from '../components/users/mapCustomer'
+import type { CustomerDemo } from '../components/users/types'
 import { resolveDemoCustomer } from '../components/users/usersDemo'
 
-function parseOverlay(
-  value: string | null,
-): StandardContentKind | 'none' {
-  if (value === 'loading' || value === 'error' || value === 'offline') {
-    return value
-  }
-  return 'none'
-}
+type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 /**
- * Page of one customer (T-10-14) — demo fixtures until T-10-09 Result.
- * No gift requests: /users/:id?empty=1
- * Standard states: /users/:id?state=loading|error|offline
+ * Page of one customer (T-10-14).
+ * Fixtures: /users/:id?demo=1 · No gift requests: ?empty=1
+ * Standard states: ?state=loading|error|offline
  */
 export function CustomerPage() {
   const { customerId = '' } = useParams()
   const [params] = useSearchParams()
-  const overlay = parseOverlay(params.get('state'))
+  const stateParam = params.get('state')
   const emptyOrders = params.get('empty') === '1'
-  const customer = resolveDemoCustomer(customerId)
-  const orders = emptyOrders ? [] : customer.orders
+  const demo = params.get('demo') === '1'
+  const fixturesOnly =
+    demo ||
+    stateParam === 'loading' ||
+    stateParam === 'error' ||
+    stateParam === 'offline'
+
+  const [overlay, setOverlay] = useState<PageOverlay>(() => {
+    if (
+      stateParam === 'loading' ||
+      stateParam === 'error' ||
+      stateParam === 'offline'
+    ) {
+      return stateParam
+    }
+    return fixturesOnly ? 'none' : 'loading'
+  })
+  const [customer, setCustomer] = useState<CustomerDemo | null>(() =>
+    fixturesOnly ? resolveDemoCustomer(customerId) : null,
+  )
+
+  const load = useCallback(async () => {
+    if (
+      stateParam === 'loading' ||
+      stateParam === 'error' ||
+      stateParam === 'offline'
+    ) {
+      setOverlay(stateParam)
+      return
+    }
+    if (fixturesOnly) {
+      const demoCustomer = resolveDemoCustomer(customerId)
+      setCustomer({
+        ...demoCustomer,
+        orders: emptyOrders ? [] : demoCustomer.orders,
+      })
+      setOverlay('none')
+      return
+    }
+    if (!customerId) {
+      setOverlay('error')
+      return
+    }
+    if (!navigator.onLine) {
+      setOverlay('offline')
+      return
+    }
+    setOverlay('loading')
+    try {
+      const result = await getAdminCustomer(customerId)
+      const mapped = customerFromApi(result)
+      if (!mapped) {
+        setOverlay('error')
+        return
+      }
+      setCustomer(mapped)
+      setOverlay('none')
+    } catch (error) {
+      if (error instanceof NetworkError) {
+        setOverlay('offline')
+        return
+      }
+      setOverlay('error')
+    }
+  }, [customerId, emptyOrders, fixturesOnly, stateParam])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  if (overlay === 'loading' || overlay === 'error' || overlay === 'offline') {
+    return (
+      <AdminShell title="Users" currentNav="Users">
+        <StandardContentState
+          kind={
+            overlay === 'loading'
+              ? 'loading'
+              : overlay === 'offline'
+                ? 'offline'
+                : 'error'
+          }
+        />
+      </AdminShell>
+    )
+  }
+
+  if (!customer) {
+    return (
+      <AdminShell title="Users" currentNav="Users">
+        <StandardContentState kind="error" />
+      </AdminShell>
+    )
+  }
 
   return (
     <AdminShell
@@ -46,10 +135,7 @@ export function CustomerPage() {
         </div>
       }
     >
-      <CustomerPageContent
-        orders={orders}
-        overlay={overlay === 'none' ? 'none' : overlay}
-      />
+      <CustomerPageContent orders={customer.orders} overlay="none" />
     </AdminShell>
   )
 }

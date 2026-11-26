@@ -1,11 +1,10 @@
 import type { GiftRequestStatus } from '../../lib/giftRequestStatus'
 
-/** UI model until T-10-09 Result. */
 export type UserListItem = {
   id: string
   name: string
   email: string
-  /** ISO day the customer registered, e.g. 2026-11-24T12:00:00.000Z */
+  /** ISO date-time the customer registered (UTC from API). */
   registeredAt: string
   giftRequestCount: number
 }

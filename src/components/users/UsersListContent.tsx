@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatReviewSentDay } from '../../lib/formatDateTime'
 import { StandardContentState } from '../standard/StandardContentState'
@@ -9,24 +8,36 @@ type PageOverlay = 'none' | 'loading' | 'error' | 'offline'
 
 type UsersListContentProps = {
   users: UserListItem[]
+  total: number
+  /** 1-based page index. */
+  page: number
+  onPageChange: (page: number) => void
   overlay?: PageOverlay
+  /** When true, `users` is already one server page. */
+  serverPaged?: boolean
 }
 
 export function UsersListContent({
   users,
+  total,
+  page,
+  onPageChange,
   overlay = 'none',
+  serverPaged = false,
 }: UsersListContentProps) {
   const navigate = useNavigate()
-  const [page, setPage] = useState(0)
 
-  const pageCount = Math.max(1, Math.ceil(users.length / USERS_PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const pageRows = users.slice(
-    safePage * USERS_PAGE_SIZE,
-    safePage * USERS_PAGE_SIZE + USERS_PAGE_SIZE,
-  )
-  const isFirst = safePage === 0
-  const isLast = safePage >= pageCount - 1 || users.length === 0
+  const listTotal = serverPaged ? total : users.length
+  const pageCount = Math.max(1, Math.ceil(listTotal / USERS_PAGE_SIZE))
+  const safePage = Math.min(Math.max(1, page), pageCount)
+  const pageRows = serverPaged
+    ? users
+    : users.slice(
+        (safePage - 1) * USERS_PAGE_SIZE,
+        (safePage - 1) * USERS_PAGE_SIZE + USERS_PAGE_SIZE,
+      )
+  const isFirst = safePage <= 1
+  const isLast = safePage >= pageCount || listTotal === 0
 
   if (overlay === 'loading') {
     return <StandardContentState kind="loading" />
@@ -37,7 +48,7 @@ export function UsersListContent({
     )
   }
 
-  if (users.length === 0) {
+  if (listTotal === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <p className="text-base leading-6 text-text-secondary">
@@ -94,7 +105,7 @@ export function UsersListContent({
         <button
           type="button"
           disabled={isFirst}
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          onClick={() => onPageChange(Math.max(1, safePage - 1))}
           className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
         >
           Previous
@@ -102,7 +113,7 @@ export function UsersListContent({
         <button
           type="button"
           disabled={isLast}
-          onClick={() => setPage((p) => p + 1)}
+          onClick={() => onPageChange(safePage + 1)}
           className="flex h-12 cursor-pointer items-center rounded-lg border border-border-default bg-bg-default px-6 text-base font-medium text-text-primary disabled:cursor-default disabled:opacity-40"
         >
           Next
